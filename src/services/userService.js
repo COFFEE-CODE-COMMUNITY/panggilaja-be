@@ -1,6 +1,3 @@
-import pgClient from "../db/postgre/pgClient.js";
-import userRepository from "../repositories/userRepository.js";
-
 const getById = async (id) => {
   const client = await pgClient.getClient();
   try {
