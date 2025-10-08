@@ -1,9 +1,176 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String              @id @default(uuid())
+  username       String?
+  email          String              @unique
+  password       String?
+  fullname       String?
+  foto_user      String?
+  login_provider LoginProvider
+  oauth_id       String?
+  created_at     DateTime            @default(now())
+  updated_at     DateTime            @updatedAt
+
+  alamat         AlamatUser[]
+  orders         Order[]
+  ulasan         Ulasan[]
+  favorites      FavoriteService[]
+}
+
+model Seller {
+  id               String         @id @default(uuid())
+  username         String
+  email            String
+  password         String
+  foto_user        String
+  status           String
+  skill            String
+  pengalaman       String
+  rating_rata_rata Float
+  foto_toko        String
+  nama_toko        String
+  deskripsi_toko   String
+  kategori_toko    String
+  alamat           String
+  provinsi         String
+  kota             String
+  kecamatan        String
+  kode_pos         String
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  services         Service[]
+  skills           Skill[]
+  orders           Order[]
+  ulasan           Ulasan[]
+  documentation    Documentation[]
+}
+
+model AlamatUser {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    String
+  alamat     String
+  provinsi   String
+  kota       String
+  kecamatan  String
+  kode_pos   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Service {
+  id            String       @id @default(uuid())
+  seller        Seller       @relation(fields: [seller_id], references: [id])
+  seller_id     String
+  nama_jasa     String
+  deskripsi     String
+  base_price    Float
+  top_price     Float
+  foto_product  String
+  status        String
+  kategori      Kategori     @relation(fields: [kategori_id], references: [id])
+  kategori_id   String
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+
+  orders        Order[]
+  ulasan        Ulasan[]
+  favorited_by  FavoriteService[]
+}
+
+model Skill {
+  id        String   @id @default(uuid())
+  seller    Seller   @relation(fields: [seller_id], references: [id])
+  seller_id String
+  skill     SkillEnum
+}
+
+model Kategori {
+  id        String    @id @default(uuid())
+  kategori  KategoriEnum
+  services  Service[]
+}
+
+model Order {
+  id             String     @id @default(uuid())
+  product        Service    @relation(fields: [product_id], references: [id])
+  product_id     String
+  seller         Seller     @relation(fields: [seller_id], references: [id])
+  seller_id      String
+  user           User       @relation(fields: [user_id], references: [id])
+  user_id        String
+  pesan_tambahan String
+  status         String
+  tanggal        DateTime
+  total_harga    Float
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+}
+
+model Ulasan {
+  id             String     @id @default(uuid())
+  product        Service    @relation(fields: [product_id], references: [id])
+  product_id     String
+  seller         Seller     @relation(fields: [seller_id], references: [id])
+  seller_id      String
+  user           User       @relation(fields: [user_id], references: [id])
+  user_id        String
+  rating         Float
+  komentar       String
+  tanggal_ulasan DateTime
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+}
+
+model Documentation {
+  id              String    @id @default(uuid())
+  seller          Seller    @relation(fields: [seller_id], references: [id])
+  seller_id       String
+  foto_testimoni  String
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+}
+
+model FavoriteService {
+  id         String    @id @default(uuid())
+  user       User      @relation(fields: [user_id], references: [id])
+  user_id    String
+  service    Service   @relation(fields: [service_id], references: [id])
+  service_id String
+  created_at DateTime  @default(now())
+}
+
+enum LoginProvider {
+  manual
+  google
+}
+
+enum SkillEnum {
+  WEB
+  DESIGN
+  MOBILE
+  WRITING
+  DATA
+  MARKETING
+  // Tambahkan sesuai kebutuhan
+}
+
+enum KategoriEnum {
+  TEKNOLOGI
+  DESAIN
+  PENULISAN
+  PENERJEMAH
+  PEMASARAN
+  LAINNYA
+  // Tambahkan sesuai kategori toko
 }

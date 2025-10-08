@@ -5,7 +5,6 @@ const app = createApp();
 
 const server = app.listen(config.port, () => {
   console.info(`Server running on port : ${config.port}`);
-  console.info(`Environment: ${config.env}`);
 });
 
 server.on("error", (err) => {

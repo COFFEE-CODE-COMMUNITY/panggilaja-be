@@ -1,7 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import routes from "./routes/mainRoute.js";
-import errorMiddleware from "./middlewares/errorMiddleware.js";
+import errorMiddleware from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
 import cors from "cors";
 
