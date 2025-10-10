@@ -1,8 +1,11 @@
 import { Router } from "express";
-import userController from "../controllers/userController.js";
+import validateToken from "../middleware/validateToken.js";
 
 const userRouter = Router();
 
-userRouter.get("/me", userController.getById);
+userRouter.use(validateToken);
+userRouter.get("/", (req, res) => {
+  res.send("Ini endpoint user");
+});
 
 export default userRouter;

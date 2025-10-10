@@ -34,12 +34,28 @@ const loginUser = async (req, res, next) => {
       return next(error);
     }
 
-    const accessToken = await authService.loginUser(req.body);
-    
-    res.status(200).json({ accessToken });
+    const token = await authService.loginUser(req.body);
+
+    res.cookie("refreshToken", token.refreshToken, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      secure: false,
+    });
+
+    res.status(200).json(token);
   } catch (error) {
     return next(error);
   }
 };
 
-export default { registerUser, loginUser };
+const refreshToken = async (req, res, next) => {
+  res.send("Ini refresh token");
+  authService.refreshToken(req.body)
+};
+
+const logoutUser = async (req, res, next) => {
+  res.clearCookie("refreshToken");
+  res.send("Cookie berhasil dihapus");
+};
+
+export default { registerUser, loginUser,refreshToken };

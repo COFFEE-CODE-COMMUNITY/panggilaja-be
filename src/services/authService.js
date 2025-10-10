@@ -3,16 +3,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import BadRequestError from "../exceptions/BadRequestError.js";
 
-const cekUser = async (email) => {
-  const user = await prisma.user.findFirst({
+const registerUser = async ({ username, email, password }) => {
+  const userAvail = await prisma.user.findUnique({
     where: { email },
   });
-
-  return user;
-};
-
-const registerUser = async ({ username, email, password }) => {
-  const userAvail = await cekUser(email);
 
   if (userAvail) {
     throw new BadRequestError("Email already registered");
@@ -32,7 +26,9 @@ const registerUser = async ({ username, email, password }) => {
 };
 
 const loginUser = async ({ email, password }) => {
-  const user = await cekUser(email);
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
   if (!user) {
     throw new BadRequestError("User not found");
@@ -48,12 +44,40 @@ const loginUser = async ({ email, password }) => {
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "10m" }
     );
-    return accessToken;
+
+    const refreshToken = jwt.sign(
+      {
+        user: {
+          username: user.username,
+          email: user.email,
+          id: user.id,
+        },
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "356d" }
+    );
+
+    return { accessToken, refreshToken };
   } else {
     throw new BadRequestError("Email or password is not valid");
   }
 };
 
-export default { registerUser, loginUser };
+const refreshToken = async ({ email, refreshToken: refreshTokenUSer }) => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { refresh_tokens: true },
+  });
+
+  const valid = user.refresh_tokens.filter((e) => {
+    return e.revoked == false;
+  });
+
+  console.log(valid);
+
+  // console.log(user.refresh_tokens);
+};
+
+export default { registerUser, loginUser, refreshToken };

@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import UnauthorizedError from "../exceptions/UnauthorizedError.js";
 
 const validateToken = async (req, res, next) => {
   try {
@@ -9,17 +10,23 @@ const validateToken = async (req, res, next) => {
       token = authHeader.split(" ")[1];
 
       if (!token) {
-        res.status(401);
-        const error = new Error("User is not authorized or token is missing");
+        const error = new UnauthorizedError(
+          "User is not authorized or token is missing"
+        );
         return next(error);
       }
 
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        let error;
         if (err) {
-          res.status(401);
-          const error = new Error("User is not authorized");
+          if (err.message === "jwt expired") {
+            error = new UnauthorizedError("Token already expired");
+          } else if (err) {
+            error = new UnauthorizedError("User is not authorized");
+          }
           return next(error);
         }
+
         req.user = decoded.user;
         return next();
       });
@@ -27,8 +34,9 @@ const validateToken = async (req, res, next) => {
       return;
     }
 
-    res.status(401);
-    const error = new Error("Authorization header missing or malformed");
+    const error = new UnauthorizedError(
+      "Authorization header missing or malformed"
+    );
     return next(error);
   } catch (error) {
     return next(error);
