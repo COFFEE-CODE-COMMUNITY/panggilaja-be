@@ -1,20 +1,69 @@
-const getById = async (id) => {
-  const client = await pgClient.getClient();
+import prisma from "../database/prisma.js";
+
+const getUserById = async (id) => {
   try {
-    console.warn(`User Detail : user`);
-    const user = await userRepository.getUserById(id, client);
-    return {
-      fullname: user.fullname,
-      email: user.email,
-      schoolName: user.school_name || "",
-      gradeLevel: user.grade_level || 0,
-      profileImage: user.profile_image || "www.profile.image",
-    };
-  } finally {
-    client.release();
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    return user;
+  } catch (err) {
+    console.error("Error fetching user:", err.message);
+    throw err;
+  }
+};
+
+const updateUserById = async (id, userData, addressData) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    const [updateUserData, updateAddressData] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id },
+        data: { ...userData },
+      }),
+      prisma.alamatUser.upsert({
+        where: { user_id: id },
+        update: addressData,
+        create: {
+          user_id: id,
+          ...addressData,
+        },
+      }),
+    ]);
+
+    return { ...updateUserData, alamat: updateAddressData };
+  } catch (err) {
+    console.error("Error fetching user:", err.message);
+    throw err;
+  }
+};
+
+const deleteUserById = async (id) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    const deleteAccount = prisma.user.delete({ where: { id } });
+
+    return deleteAccount;
+  } catch (err) {
+    console.error("Error fetching user:", err.message);
+    throw err;
   }
 };
 
 export default {
-  getById,
+  getUserById,
+  updateUserById,
+  deleteUserById,
 };

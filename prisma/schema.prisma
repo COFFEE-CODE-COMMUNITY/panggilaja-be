@@ -57,8 +57,8 @@ model Seller {
 
 model AlamatUser {
   id         String   @id @default(uuid())
-  user       User     @relation(fields: [user_id], references: [id])
-  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id    String   @unique
   alamat     String
   provinsi   String
   kota       String
@@ -70,7 +70,7 @@ model AlamatUser {
 
 model Service {
   id            String       @id @default(uuid())
-  seller        Seller       @relation(fields: [seller_id], references: [id])
+  seller        Seller       @relation(fields: [seller_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   seller_id     String
   nama_jasa     String
   deskripsi     String
@@ -90,7 +90,7 @@ model Service {
 
 model Skill {
   id        String   @id @default(uuid())
-  seller    Seller   @relation(fields: [seller_id], references: [id])
+  seller    Seller   @relation(fields: [seller_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   seller_id String
   skill     SkillEnum
 }
@@ -105,10 +105,10 @@ model Order {
   id             String     @id @default(uuid())
   product        Service    @relation(fields: [product_id], references: [id])
   product_id     String
-  seller         Seller     @relation(fields: [seller_id], references: [id])
-  seller_id      String
-  user           User       @relation(fields: [user_id], references: [id])
-  user_id        String
+  seller         Seller?     @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  seller_id      String?
+  user           User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  user_id        String?
   pesan_tambahan String
   status         String
   tanggal        DateTime
@@ -121,10 +121,10 @@ model Ulasan {
   id             String     @id @default(uuid())
   product        Service    @relation(fields: [product_id], references: [id])
   product_id     String
-  seller         Seller     @relation(fields: [seller_id], references: [id])
-  seller_id      String
-  user           User       @relation(fields: [user_id], references: [id])
-  user_id        String
+  seller         Seller?     @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  seller_id      String?
+  user           User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  user_id        String?
   rating         Float
   komentar       String
   tanggal_ulasan DateTime
@@ -134,8 +134,8 @@ model Ulasan {
 
 model Documentation {
   id              String    @id @default(uuid())
-  seller          Seller    @relation(fields: [seller_id], references: [id])
-  seller_id       String
+  seller          Seller?    @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  seller_id       String?
   foto_testimoni  String
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
@@ -143,7 +143,7 @@ model Documentation {
 
 model FavoriteService {
   id         String    @id @default(uuid())
-  user       User      @relation(fields: [user_id], references: [id])
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id    String
   service    Service   @relation(fields: [service_id], references: [id])
   service_id String
