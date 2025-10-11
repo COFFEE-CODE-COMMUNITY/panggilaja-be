@@ -9,6 +9,7 @@ userRouter.use(validateToken);
 
 // User Routes
 userRouter.get("/:id", userController.getUserById);
+userRouter.get("/:id/addresses", userController.getAddressById);
 userRouter.put("/:id", userController.updateUserById);
 userRouter.delete("/:id", userController.deleteUserById);
 

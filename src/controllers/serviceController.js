@@ -1,117 +1,81 @@
 import serviceItemService from "../services/serviceItemService.js";
 
-// const getServices = async (req, res, next) => {
-//   try {
-//     const userId = req.user.id;
-//     const songs = await songService.getPlaylist(userId);
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Data didalam playlist anda!",
-//       data: songs,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const getServiceById = async (req, res, next) => {
-//   try {
-//     const validate = await songSchema.getSongById.validateAsync(req.params);
-
-//     if (!validate) {
-//       throw {
-//         code: 400,
-//         message: validate.error.details.map((d) => d.message),
-//       };
-//     }
-
-//     const id = validate.id;
-//     const result = await songService.getSongById(id, req.user.id);
-
-//     return res.status(200).json({
-//       success: true,
-//       message: `Lagu dengan id ${id} berhasil ditemukan!`,
-//       data: result,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-const addService = async (req, res, next) => {
+const getAllServices = async (req, res, next) => {
   try {
-    const request = req.body;
-    const result = await serviceItemService.addService(request);
-    res.status(201).json({
-      success: true,
-      message: "Service added successfully!",
-      data: result, // bisa dikembalikan langsung hasil servicenya
+    const result = await serviceItemService.getAllServices();
+    res.status(200).json({
+      status: "success",
+      message: "Success Get All Data Service!",
+      data: result,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// const updateServiceById = async (req, res, next) => {
-//   try {
-//     const data = {
-//       id: req.params.id,
-//       title: req.body.title,
-//       artists: req.body.artists,
-//       url: req.body.url,
-//     };
+const getServiceById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const result = await serviceItemService.getServiceById(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Service by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-//     const validate = await songSchema.updateSong.validateAsync(data, {
-//       abortEarly: false,
-//     });
+const addItemService = async (req, res, next) => {
+  try {
+    // const seller_id = req.user.id;
+    const seller_id = "6cfdaf48-23a3-4c7c-9837-50ytrf654rt6";
+    const request = req.body;
+    const result = await serviceItemService.addItemService(seller_id, request);
+    res.status(201).json({
+      status: "success",
+      message: "Service added successfully!",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-//     const result = await songService.updateSongById(validate, req.user.id);
+const updateServiceById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const request = req.body;
+    const result = await serviceItemService.updateServiceById(id, request);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Service by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-//     if (!result) {
-//       throw {
-//         code: 400,
-//         message: `Lagu gagal diperbarui: ${result.message}`,
-//       };
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: `Lagu dengan id ${validate.id} berhasil diperbarui!`,
-//       data: result,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const deleteServiceById = async (req, res, next) => {
-//   try {
-//     const validate = await songSchema.deleteSong.validateAsync(req.params);
-//     const id = validate.id;
-//     const result = await songService.deleteSongById(id, req.user.id);
-
-//     if (!result) {
-//       throw {
-//         code: 400,
-//         message: `Lagu gagal dihapus: ${result.message}`,
-//       };
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: `Lagu dengan id ${id} berhasil dihapus!`,
-//       data: result,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+const deleteServiceById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const result = await serviceItemService.deleteServiceById(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Delete Service by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export default {
-  // getServices,
-  // getServiceById,
-  addService,
-  // updateServiceById,
-  // deleteServiceById,
+  getAllServices,
+  getServiceById,
+  addItemService,
+  updateServiceById,
+  deleteServiceById,
 };

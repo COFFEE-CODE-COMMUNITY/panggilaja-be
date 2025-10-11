@@ -5,9 +5,13 @@ import validateToken from "../middleware/validateToken.js";
 const serviceRouter = Router();
 
 // Token Validation
-serviceRouter.use(validateToken);
+// serviceRouter.use(validateToken);
 
 // Service Routes
-serviceRouter.post("/", serviceController.addService);
+serviceRouter.get("/", serviceController.getAllServices);
+serviceRouter.get("/:id", serviceController.getServiceById);
+serviceRouter.post("/", serviceController.addItemService);
+serviceRouter.put("/:id", serviceController.updateServiceById);
+serviceRouter.delete("/:id", serviceController.deleteServiceById);
 
 export default serviceRouter;
