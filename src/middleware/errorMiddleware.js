@@ -4,7 +4,7 @@ const errorMiddleware = (err, req, res, next) => {
   res.status(statusCode).json({
     status: "error",
     message: err.message || "Internal Server Error",
-    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    error_code: err.errorCode,
   });
 };
 

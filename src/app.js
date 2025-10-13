@@ -4,12 +4,15 @@ import routes from "./routes/mainRoute.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 
 const createApp = () => {
   const app = express();
 
   // Middleware
   app.use(express.json());
+  app.use(cookieParser());
   app.use(express.urlencoded({ extended: false }));
   app.use(morgan("dev"));
   app.use(helmet());

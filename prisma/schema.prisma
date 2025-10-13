@@ -3,31 +3,43 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id             String              @id @default(uuid())
+  id             String            @id @default(uuid())
   username       String?
-  email          String              @unique
+  email          String            @unique
   password       String?
   fullname       String?
   foto_user      String?
   login_provider LoginProvider
   oauth_id       String?
-  created_at     DateTime            @default(now())
-  updated_at     DateTime            @updatedAt
-
-  alamat         AlamatUser[]
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+  alamat         AlamatUser?
+  favorites      FavoriteService[]
   orders         Order[]
   ulasan         Ulasan[]
-  favorites      FavoriteService[]
+  refresh_token  RefreshToken[]
+  password_resets PasswordReset[]
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  user_id     String
+  token       String   @unique
+  revoked     Boolean  @default(false)
+  expired_at  DateTime
+  created_at  DateTime @default(now())
+
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Seller {
-  id               String         @id @default(uuid())
+  id               String          @id @default(uuid())
   username         String
   email            String
   password         String
@@ -45,19 +57,21 @@ model Seller {
   kota             String
   kecamatan        String
   kode_pos         String
-  created_at       DateTime       @default(now())
-  updated_at       DateTime       @updatedAt
-
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  documentation    Documentation[]
+  orders           Order[]
   services         Service[]
   skills           Skill[]
-  orders           Order[]
   ulasan           Ulasan[]
-  documentation    Documentation[]
 }
 
 model AlamatUser {
   id         String   @id @default(uuid())
+<<<<<<< HEAD
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+=======
+>>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   user_id    String   @unique
   alamat     String
   provinsi   String
@@ -66,9 +80,11 @@ model AlamatUser {
   kode_pos   String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Service {
+<<<<<<< HEAD
   id            String       @id @default(uuid())
   seller        Seller       @relation(fields: [seller_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   seller_id     String
@@ -91,48 +107,84 @@ model Service {
 model Skill {
   id        String   @id @default(uuid())
   seller    Seller   @relation(fields: [seller_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+=======
+  id           String            @id @default(uuid())
+  seller_id    String
+  nama_jasa    String
+  deskripsi    String
+  base_price   Float
+  top_price    Float
+  foto_product String
+  status       String
+  kategori_id  String
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
+  favorited_by FavoriteService[]
+  orders       Order[]
+  kategori     Kategori          @relation(fields: [kategori_id], references: [id])
+  seller       Seller            @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  ulasan       Ulasan[]
+}
+
+model Skill {
+  id        String    @id @default(uuid())
+>>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   seller_id String
   skill     SkillEnum
+  seller    Seller    @relation(fields: [seller_id], references: [id], onDelete: Cascade)
 }
 
 model Kategori {
-  id        String    @id @default(uuid())
-  kategori  KategoriEnum
-  services  Service[]
+  id       String       @id @default(uuid())
+  kategori KategoriEnum
+  services Service[]
 }
 
 model Order {
-  id             String     @id @default(uuid())
-  product        Service    @relation(fields: [product_id], references: [id])
+  id             String   @id @default(uuid())
   product_id     String
+<<<<<<< HEAD
   seller         Seller?     @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
   seller_id      String?
   user           User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+=======
+  seller_id      String?
+>>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   user_id        String?
   pesan_tambahan String
   status         String
   tanggal        DateTime
   total_harga    Float
-  created_at     DateTime   @default(now())
-  updated_at     DateTime   @updatedAt
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  product        Service  @relation(fields: [product_id], references: [id])
+  seller         Seller?  @relation(fields: [seller_id], references: [id])
+  user           User?    @relation(fields: [user_id], references: [id])
 }
 
 model Ulasan {
-  id             String     @id @default(uuid())
-  product        Service    @relation(fields: [product_id], references: [id])
+  id             String   @id @default(uuid())
   product_id     String
+<<<<<<< HEAD
   seller         Seller?     @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
   seller_id      String?
   user           User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+=======
+  seller_id      String?
+>>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   user_id        String?
   rating         Float
   komentar       String
   tanggal_ulasan DateTime
-  created_at     DateTime   @default(now())
-  updated_at     DateTime   @updatedAt
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  product        Service  @relation(fields: [product_id], references: [id])
+  seller         Seller?  @relation(fields: [seller_id], references: [id])
+  user           User?    @relation(fields: [user_id], references: [id])
 }
 
 model Documentation {
+<<<<<<< HEAD
   id              String    @id @default(uuid())
   seller          Seller?    @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
   seller_id       String?
@@ -144,11 +196,35 @@ model Documentation {
 model FavoriteService {
   id         String    @id @default(uuid())
   user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id    String
-  service    Service   @relation(fields: [service_id], references: [id])
-  service_id String
-  created_at DateTime  @default(now())
+=======
+  id             String   @id @default(uuid())
+  seller_id      String?
+  foto_testimoni String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  seller         Seller?  @relation(fields: [seller_id], references: [id])
 }
+
+model FavoriteService {
+  id         String   @id @default(uuid())
+>>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
+  user_id    String
+  service_id String
+  created_at DateTime @default(now())
+  service    Service  @relation(fields: [service_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model PasswordReset {
+  id          String   @id @default(uuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  code        String
+  expired_at  DateTime
+  used        Boolean  @default(false)
+  created_at  DateTime @default(now())
+}
+
 
 enum LoginProvider {
   manual
@@ -162,7 +238,6 @@ enum SkillEnum {
   WRITING
   DATA
   MARKETING
-  // Tambahkan sesuai kebutuhan
 }
 
 enum KategoriEnum {
@@ -172,5 +247,4 @@ enum KategoriEnum {
   PENERJEMAH
   PEMASARAN
   LAINNYA
-  // Tambahkan sesuai kategori toko
 }
