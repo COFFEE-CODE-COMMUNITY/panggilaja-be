@@ -68,10 +68,6 @@ model Seller {
 
 model AlamatUser {
   id         String   @id @default(uuid())
-<<<<<<< HEAD
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-=======
->>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   user_id    String   @unique
   alamat     String
   provinsi   String
@@ -84,30 +80,6 @@ model AlamatUser {
 }
 
 model Service {
-<<<<<<< HEAD
-  id            String       @id @default(uuid())
-  seller        Seller       @relation(fields: [seller_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  seller_id     String
-  nama_jasa     String
-  deskripsi     String
-  base_price    Float
-  top_price     Float
-  foto_product  String
-  status        String
-  kategori      Kategori     @relation(fields: [kategori_id], references: [id])
-  kategori_id   String
-  created_at    DateTime     @default(now())
-  updated_at    DateTime     @updatedAt
-
-  orders        Order[]
-  ulasan        Ulasan[]
-  favorited_by  FavoriteService[]
-}
-
-model Skill {
-  id        String   @id @default(uuid())
-  seller    Seller   @relation(fields: [seller_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-=======
   id           String            @id @default(uuid())
   seller_id    String
   nama_jasa    String
@@ -128,7 +100,6 @@ model Skill {
 
 model Skill {
   id        String    @id @default(uuid())
->>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   seller_id String
   skill     SkillEnum
   seller    Seller    @relation(fields: [seller_id], references: [id], onDelete: Cascade)
@@ -143,13 +114,7 @@ model Kategori {
 model Order {
   id             String   @id @default(uuid())
   product_id     String
-<<<<<<< HEAD
-  seller         Seller?     @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
   seller_id      String?
-  user           User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
-=======
-  seller_id      String?
->>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   user_id        String?
   pesan_tambahan String
   status         String
@@ -165,13 +130,7 @@ model Order {
 model Ulasan {
   id             String   @id @default(uuid())
   product_id     String
-<<<<<<< HEAD
-  seller         Seller?     @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
   seller_id      String?
-  user           User?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
-=======
-  seller_id      String?
->>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   user_id        String?
   rating         Float
   komentar       String
@@ -184,19 +143,6 @@ model Ulasan {
 }
 
 model Documentation {
-<<<<<<< HEAD
-  id              String    @id @default(uuid())
-  seller          Seller?    @relation(fields: [seller_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  seller_id       String?
-  foto_testimoni  String
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-}
-
-model FavoriteService {
-  id         String    @id @default(uuid())
-  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-=======
   id             String   @id @default(uuid())
   seller_id      String?
   foto_testimoni String
@@ -207,7 +153,6 @@ model FavoriteService {
 
 model FavoriteService {
   id         String   @id @default(uuid())
->>>>>>> f67526da0cca4dcd7545b8253e966fb61fd9c8e0
   user_id    String
   service_id String
   created_at DateTime @default(now())
