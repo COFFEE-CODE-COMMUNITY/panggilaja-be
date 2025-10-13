@@ -17,14 +17,12 @@ const validateToken = async (req, res, next) => {
       }
 
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        let error;
         if (err) {
           if (err.message === "jwt expired") {
-            error = new UnauthorizedError("Token already expired");
+            throw new UnauthorizedError("Token already expired");
           } else if (err) {
-            error = new UnauthorizedError("User is not authorized");
+            throw new UnauthorizedError("User is not authorized");
           }
-          return next(error);
         }
 
         req.user = decoded.user;
@@ -34,10 +32,7 @@ const validateToken = async (req, res, next) => {
       return;
     }
 
-    const error = new UnauthorizedError(
-      "Authorization header missing or malformed"
-    );
-    return next(error);
+    throw new UnauthorizedError("Authorization header missing or malformed");
   } catch (error) {
     return next(error);
   }

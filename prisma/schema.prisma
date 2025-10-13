@@ -23,6 +23,19 @@ model User {
   favorites      FavoriteService[]
   orders         Order[]
   ulasan         Ulasan[]
+  refresh_token  RefreshToken[]
+  password_resets PasswordReset[]
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  user_id     String
+  token       String   @unique
+  revoked     Boolean  @default(false)
+  expired_at  DateTime
+  created_at  DateTime @default(now())
+
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Seller {
@@ -146,6 +159,17 @@ model FavoriteService {
   service    Service  @relation(fields: [service_id], references: [id])
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
+
+model PasswordReset {
+  id          String   @id @default(uuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  code        String
+  expired_at  DateTime
+  used        Boolean  @default(false)
+  created_at  DateTime @default(now())
+}
+
 
 enum LoginProvider {
   manual
