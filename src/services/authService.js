@@ -1,53 +1,79 @@
-// services/authService.js
 import prisma from "../database/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../config/index.js";
-import NotFoundError from "../exceptions/NotFoundError.js";
+
 import BadRequestError from "../exceptions/BadRequestError.js";
+import NotFoundError from "../exceptions/NotFoundError.js";
 import ForbiddenError from "../exceptions/ForbiddenError.js";
 import UnauthorizedError from "../exceptions/UnauthorizedError.js";
 
 const registerUser = async ({ username, email, password }) => {
-  const userAvail = await prisma.user.findUnique({ where: { email } });
-  if (userAvail) {
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
     throw new BadRequestError("Email already registered", "AUTH_EMAIL_TAKEN");
   }
 
-  const hashPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   const newUser = await prisma.user.create({
     data: {
       username,
       email,
-      password: hashPassword,
+      password: hashedPassword,
       login_provider: "manual",
     },
   });
 
-  return newUser;
+  await prisma.userRoleMap.create({
+    data: {
+      user_id: newUser.id,
+      role: "USER",
+    },
+  });
+
+  await prisma.buyerProfile.create({
+    data: {
+      user_id: newUser.id,
+      fullname: username || null,
+      total_order: 0,
+    },
+  });
+
+  return {
+    id: newUser.id,
+    email: newUser.email,
+    username: newUser.username,
+    role: "USER",
+  };
 };
 
 const loginUser = async ({ email, password }) => {
   if (!email || !password) {
     throw new BadRequestError(
-      "Email and Password required",
+      "Email and password required",
       "AUTH_MISSING_CREDENTIAL"
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new BadRequestError("User not found", "AUTH_USER_NOT_FOUND");
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { roles: true },
+  });
+  if (!user) throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
 
-  const valid = await bcrypt.compare(password, user.password || "");
-  if (!valid) {
-    throw new BadRequestError(
-      "Email or password is not valid",
-      "AUTH_BAD_CREDENTIAL"
-    );
+  const isValid = await bcrypt.compare(password, user.password || "");
+  if (!isValid) {
+    throw new BadRequestError("Invalid credentials", "AUTH_BAD_CREDENTIAL");
   }
 
   const payload = {
-    user: { username: user.username, email: user.email, id: user.id },
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      roles: user.roles.map((r) => r.role),
+    },
   };
 
   const accessToken = jwt.sign(payload, config.jwt_key.access_key, {
@@ -58,7 +84,6 @@ const loginUser = async ({ email, password }) => {
     expiresIn: "365d",
   });
 
-  // decode exp → simpan expired_at
   const { exp } = jwt.decode(refreshToken);
   await prisma.refreshToken.create({
     data: {
@@ -68,34 +93,39 @@ const loginUser = async ({ email, password }) => {
     },
   });
 
-  return { accessToken, refreshToken };
+  return {
+    accessToken,
+    refreshToken,
+    user: payload.user,
+  };
 };
 
-const refreshToken = async ({ refreshToken: rt }) => {
-  if (!rt) {
+const refreshAccessToken = async ({ refreshToken }) => {
+  if (!refreshToken) {
     throw new BadRequestError("Refresh token required!", "TOKEN_MISSING");
   }
 
   const tokenData = await prisma.refreshToken.findUnique({
-    where: { token: rt },
-    include: { user: true },
+    where: { token: refreshToken },
+    include: { user: { include: { roles: true } } },
   });
+
   if (!tokenData || tokenData.revoked) {
-    throw new NotFoundError("Token not found!", "TOKEN_REVOKED");
+    throw new NotFoundError("Token not found or revoked", "TOKEN_REVOKED");
   }
 
   let decoded;
   try {
-    decoded = jwt.verify(rt, config.jwt_key.refresh_key);
+    decoded = jwt.verify(refreshToken, config.jwt_key.refresh_key);
   } catch (err) {
-    if (err?.message === "jwt expired") {
-      throw new UnauthorizedError("Token already expired", "TOKEN_EXPIRED");
+    if (err.message === "jwt expired") {
+      throw new UnauthorizedError("Refresh token expired", "TOKEN_EXPIRED");
     }
-    throw new ForbiddenError("Refresh token not valid", "TOKEN_INVALID");
+    throw new ForbiddenError("Invalid refresh token", "TOKEN_INVALID");
   }
 
   if (tokenData.user_id !== decoded.user.id) {
-    throw new ForbiddenError("Refresh token not valid", "TOKEN_INVALID");
+    throw new ForbiddenError("Token mismatch", "TOKEN_INVALID");
   }
 
   const accessToken = jwt.sign(
@@ -104,24 +134,29 @@ const refreshToken = async ({ refreshToken: rt }) => {
     { expiresIn: "10m" }
   );
 
-  return accessToken;
+  return { accessToken };
 };
 
 const logoutUser = async ({ refreshToken }) => {
   if (!refreshToken) {
-    throw new BadRequestError("User already logout", "ALREADY_LOGOUT");
+    throw new BadRequestError("No token provided", "ALREADY_LOGOUT");
   }
-  // lebih aman: mark revoked, bukan delete (jejak audit)
-  const updated = await prisma.refreshToken.update({
-    where: { token: refreshToken },
+
+  const updated = await prisma.refreshToken.updateMany({
+    where: { token: refreshToken, revoked: false },
     data: { revoked: true },
   });
-  return updated;
+
+  if (updated.count === 0) {
+    throw new NotFoundError("Token not found", "TOKEN_NOT_FOUND");
+  }
+
+  return { message: "Logout successful" };
 };
 
 export default {
   registerUser,
   loginUser,
-  refreshToken,
+  refreshAccessToken,
   logoutUser,
 };
