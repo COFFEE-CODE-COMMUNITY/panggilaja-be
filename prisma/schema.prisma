@@ -8,25 +8,205 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id             String            @id @default(uuid())
-  username       String?
-  email          String            @unique
-  password       String?
-  fullname       String?
-  foto_user      String?
-  login_provider LoginProvider
-  oauth_id       String?
-  created_at     DateTime          @default(now())
-  updated_at     DateTime          @updatedAt
-  alamat         AlamatUser?
-  favorites      FavoriteService[]
-  orders         Order[]
-  ulasan         Ulasan[]
-  refresh_token  RefreshToken[]
-  password_resets PasswordReset[]
+//
+// ENUMS
+//
+enum LoginProvider {
+  manual
+  google
 }
 
+enum RoleType {
+  USER
+  SELLER
+}
+
+enum ServiceStatus {
+  active
+  archive
+}
+
+enum OrderStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+//
+// MAIN MODELS
+//
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  password       String
+  username       String?
+  login_provider LoginProvider
+  oauth_id       String?
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+
+  // Relations
+  roles          UserRoleMap[]
+  buyerProfile   BuyerProfile?
+  sellerProfile  SellerProfile?
+  refreshTokens  RefreshToken[]
+  passwordResets PasswordReset[]
+  services       Service[]        @relation("SellerServices")
+  ordersBuyer    Order[]          @relation("BuyerOrders")
+  ordersSeller   Order[]          @relation("SellerOrders")
+  reviews        Review[]
+  favorites      FavoriteService[]
+  skills         Skill[]
+  documentations Documentation[]
+}
+
+model UserRoleMap {
+  id      String    @id @default(uuid())
+  user_id String
+  role    RoleType
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, role])
+}
+
+//
+// PROFILE MODELS
+//
+model BuyerProfile {
+  id          String   @id @default(uuid())
+  user_id     String   @unique
+  fullname    String?
+  total_order Int      @default(0)
+  foto_buyer  String?
+  alamat      String?
+  provinsi    String?
+  kota        String?
+  kecamatan   String?
+  kode_pos    String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model SellerProfile {
+  id               String   @id @default(uuid())
+  user_id          String   @unique
+  status           String   @default("active")
+  deskripsi_toko   String?
+  foto_toko        String?
+  kategori_toko    String?
+  pengalaman       String?
+  rating_rata_rata Float    @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+//
+// SERVICE, KATEGORI, SKILL
+//
+model Kategori {
+  id       String    @id @default(uuid())
+  kategori String    @unique
+  services Service[]
+}
+
+model Service {
+  id           String           @id @default(uuid())
+  seller_id    String
+  nama_jasa    String
+  deskripsi    String
+  base_price   Float
+  top_price    Float
+  foto_product String
+  status       ServiceStatus
+  kategori_id  String
+  created_at   DateTime         @default(now())
+  updated_at   DateTime         @updatedAt
+
+  kategori     Kategori         @relation(fields: [kategori_id], references: [id])
+  seller       User             @relation("SellerServices", fields: [seller_id], references: [id], onDelete: Cascade)
+  orders       Order[]
+  reviews      Review[]
+  favorites    FavoriteService[]
+  documentations Documentation[]
+}
+
+model Skill {
+  id        String @id @default(uuid())
+  seller_id String
+  skill     String
+
+  seller User @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+}
+
+//
+// ORDER & REVIEW
+//
+model Order {
+  id             String       @id @default(uuid())
+  service_id     String
+  buyer_id       String
+  seller_id      String
+  pesan_tambahan String?
+  status         OrderStatus  @default(pending)
+  tanggal        DateTime     @default(now())
+  total_harga    Float
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  service Service @relation(fields: [service_id], references: [id])
+  buyer   User    @relation("BuyerOrders", fields: [buyer_id], references: [id])
+  seller  User    @relation("SellerOrders", fields: [seller_id], references: [id])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  service_id String
+  user_id    String
+  rating     Float
+  komentar   String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  service Service @relation(fields: [service_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+//
+// FAVORITE & DOCUMENTATION
+//
+model FavoriteService {
+  id         String   @id @default(uuid())
+  user_id    String
+  service_id String
+  created_at DateTime @default(now())
+
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [service_id], references: [id])
+
+  @@unique([user_id, service_id])
+}
+
+model Documentation {
+  id             String   @id @default(uuid())
+  service_id     String?
+  seller_id      String?
+  foto_testimoni String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  service Service? @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  seller  User?    @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+}
+
+//
+// AUTH MODELS
+//
 model RefreshToken {
   id          String   @id @default(uuid())
   user_id     String
@@ -35,161 +215,16 @@ model RefreshToken {
   expired_at  DateTime
   created_at  DateTime @default(now())
 
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-}
-
-model Seller {
-  id               String          @id @default(uuid())
-  username         String
-  email            String
-  password         String
-  foto_user        String
-  status           String
-  skill            String
-  pengalaman       String
-  rating_rata_rata Float
-  foto_toko        String
-  nama_toko        String
-  deskripsi_toko   String
-  kategori_toko    String
-  alamat           String
-  provinsi         String
-  kota             String
-  kecamatan        String
-  kode_pos         String
-  created_at       DateTime        @default(now())
-  updated_at       DateTime        @updatedAt
-  documentation    Documentation[]
-  orders           Order[]
-  services         Service[]
-  skills           Skill[]
-  ulasan           Ulasan[]
-}
-
-model AlamatUser {
-  id         String   @id @default(uuid())
-  user_id    String   @unique
-  alamat     String
-  provinsi   String
-  kota       String
-  kecamatan  String
-  kode_pos   String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-}
-
-model Service {
-  id           String            @id @default(uuid())
-  seller_id    String
-  nama_jasa    String
-  deskripsi    String
-  base_price   Float
-  top_price    Float
-  foto_product String
-  status       String
-  kategori_id  String
-  created_at   DateTime          @default(now())
-  updated_at   DateTime          @updatedAt
-  favorited_by FavoriteService[]
-  orders       Order[]
-  kategori     Kategori          @relation(fields: [kategori_id], references: [id])
-  seller       Seller            @relation(fields: [seller_id], references: [id], onDelete: Cascade)
-  ulasan       Ulasan[]
-}
-
-model Skill {
-  id        String    @id @default(uuid())
-  seller_id String
-  skill     SkillEnum
-  seller    Seller    @relation(fields: [seller_id], references: [id], onDelete: Cascade)
-}
-
-model Kategori {
-  id       String       @id @default(uuid())
-  kategori KategoriEnum
-  services Service[]
-}
-
-model Order {
-  id             String   @id @default(uuid())
-  product_id     String
-  seller_id      String?
-  user_id        String?
-  pesan_tambahan String
-  status         String
-  tanggal        DateTime
-  total_harga    Float
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-  product        Service  @relation(fields: [product_id], references: [id])
-  seller         Seller?  @relation(fields: [seller_id], references: [id])
-  user           User?    @relation(fields: [user_id], references: [id])
-}
-
-model Ulasan {
-  id             String   @id @default(uuid())
-  product_id     String
-  seller_id      String?
-  user_id        String?
-  rating         Float
-  komentar       String
-  tanggal_ulasan DateTime
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-  product        Service  @relation(fields: [product_id], references: [id])
-  seller         Seller?  @relation(fields: [seller_id], references: [id])
-  user           User?    @relation(fields: [user_id], references: [id])
-}
-
-model Documentation {
-  id             String   @id @default(uuid())
-  seller_id      String?
-  foto_testimoni String
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-  seller         Seller?  @relation(fields: [seller_id], references: [id])
-}
-
-model FavoriteService {
-  id         String   @id @default(uuid())
-  user_id    String
-  service_id String
-  created_at DateTime @default(now())
-  service    Service  @relation(fields: [service_id], references: [id])
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model PasswordReset {
   id          String   @id @default(uuid())
   user_id     String
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  code        String
-  expired_at  DateTime
+  code        String   @unique
   used        Boolean  @default(false)
+  expired_at  DateTime
   created_at  DateTime @default(now())
-}
 
-
-enum LoginProvider {
-  manual
-  google
-}
-
-enum SkillEnum {
-  WEB
-  DESIGN
-  MOBILE
-  WRITING
-  DATA
-  MARKETING
-}
-
-enum KategoriEnum {
-  TEKNOLOGI
-  DESAIN
-  PENULISAN
-  PENERJEMAH
-  PEMASARAN
-  LAINNYA
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
