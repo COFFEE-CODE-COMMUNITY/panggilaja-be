@@ -24,7 +24,7 @@ const getServiceById = async (id) => {
 
 const addItemService = async (seller_id, data) => {
   try {
-    const seller = await prisma.seller.findUnique({
+    const seller = await prisma.SellerProfile.findUnique({
       where: { id: seller_id },
     });
 
@@ -33,13 +33,13 @@ const addItemService = async (seller_id, data) => {
     const newService = await prisma.service.create({
       data: {
         seller_id: seller_id,
-        status: "Aktif",
         nama_jasa: data.nama_jasa,
         deskripsi: data.deskripsi,
         base_price: data.base_price,
         top_price: data.top_price,
         foto_product: data.foto_product,
-        kategori_id: "09ae91a2-2b31-4ee4-bc89-189db4b65f3c",
+        status: "active",
+        kategori_id: "6387fa09-a02a-4fe4-bb5c-19690f2bd937",
       },
     });
 

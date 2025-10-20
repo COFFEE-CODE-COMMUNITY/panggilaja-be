@@ -18,7 +18,7 @@ const getUserById = async (id) => {
 
 const getAddressById = async (id) => {
   try {
-    const address = await prisma.alamatUser.findUnique({
+    const address = await prisma.BuyerProfile.findUnique({
       where: { user_id: id },
     });
 
@@ -31,30 +31,20 @@ const getAddressById = async (id) => {
   }
 };
 
-const updateUserById = async (id, userData, addressData) => {
+const updateUserById = async (id, data) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id },
+    const buyerProfile = await prisma.BuyerProfile.findUnique({
+      where: { user_id: id },
     });
 
-    if (!user) throw new NotFoundError("User not found");
+    if (!buyerProfile) throw new NotFoundError("User not found");
 
-    const [updateUserData, updateAddressData] = await prisma.$transaction([
-      prisma.user.update({
-        where: { id },
-        data: { ...userData },
-      }),
-      prisma.alamatUser.upsert({
-        where: { user_id: id },
-        update: addressData,
-        create: {
-          user_id: id,
-          ...addressData,
-        },
-      }),
-    ]);
+    const updatedUserProfile = await prisma.BuyerProfile.update({
+      where: { user_id: id },
+      data,
+    });
 
-    return { ...updateUserData, alamat: updateAddressData };
+    return updatedUserProfile;
   } catch (err) {
     console.error("Error update user:", err.message);
     throw err;

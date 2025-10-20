@@ -43,36 +43,61 @@ const getAllServiceByIdSeller = async (req, res, next) => {
 
 const addNewSeller = async (req, res, next) => {
   try {
-    const request = req.body;
-    if (!request.username || !request.email || !request.password) {
-      throw new BadRequestError(
-        "All fields are mandatory",
-        "MISSING_CREDENTIAL"
-      );
-    }
-    const newSeller = await sellerService.addNewSeller(request);
+    const user_id = req.user.id;
+    const dataSeller = {
+      deskripsi_toko: req.body.deskripsi_toko,
+      foto_toko: req.body.foto_toko,
+      kategori_toko: req.body.kategori_toko,
+      pengalaman: req.body.pengalaman,
+    };
+    const dataSkill = {
+      skill: req.body.skill,
+    };
+    const addNewSeller = await sellerService.addNewSeller(
+      user_id,
+      dataSeller,
+      dataSkill
+    );
     res.status(200).json({
       status: "success",
       message: "Account created",
-      data: { seller: { _id: newSeller.id, email: newSeller.email } },
+      data: addNewSeller,
     });
   } catch (error) {
     next(error);
   }
 };
 
-const updateSellerById = async (req, res, next) => {
+const updateSellerById = async (id, dataSeller, dataSkill) => {
   try {
-    const id = req.params.id;
-    const request = req.body;
-    const result = await sellerService.updateSellerById(id, request);
-    res.status(200).json({
-      status: "success",
-      message: `Success Update Seller by Id: ${id}`,
-      data: result,
+    const seller = await prisma.SellerProfile.findUnique({
+      where: { id },
     });
-  } catch (error) {
-    next(error);
+
+    if (!seller) throw new NotFoundError(404, "Seller not found");
+
+    const updatedSeller = await prisma.$transaction(async (tx) => {
+      const updatedProfile = await tx.SellerProfile.update({
+        where: { id },
+        data: {
+          ...dataSeller,
+        },
+      });
+
+      await tx.Skill.update({
+        where: { id },
+        data: {
+          ...dataSkill,
+        },
+      });
+
+      return updatedProfile;
+    });
+
+    return updatedSeller;
+  } catch (err) {
+    console.error("Error update service:", err.message);
+    throw err;
   }
 };
 

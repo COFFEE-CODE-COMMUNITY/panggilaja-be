@@ -1,11 +1,10 @@
 import prisma from "../database/prisma.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
-import bcrypt from "bcrypt";
 import BadRequestError from "../exceptions/BadRequestError.js";
 
 const getAllSeller = async () => {
   try {
-    const sellers = prisma.seller.findMany();
+    const sellers = prisma.SellerProfile.findMany();
     return sellers;
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
@@ -15,7 +14,7 @@ const getAllSeller = async () => {
 
 const getSellerById = async (id) => {
   try {
-    const seller = prisma.seller.findUnique({ where: { id } });
+    const seller = prisma.SellerProfile.findUnique({ where: { id } });
     if (!seller) throw new NotFoundError("Seller not found");
     return seller;
   } catch (err) {
@@ -38,45 +37,81 @@ const getAllServiceByIdSeller = async (sellerId) => {
   }
 };
 
-const addNewSeller = async (data) => {
+const addNewSeller = async (user_id, dataSeller, dataSkill) => {
   try {
-    const sellerAvail = await prisma.seller.findUnique({
-      where: { email: data.email },
+    const sellerAvail = await prisma.SellerProfile.findUnique({
+      where: { user_id },
     });
 
     if (sellerAvail) {
-      throw new BadRequestError("Email already registered", "AUTH_EMAIL_TAKEN");
+      throw new BadRequestError("Account has already!", "AUTH_SELLER_TAKEN");
     }
 
-    const hashPassword = await bcrypt.hash(data.password, 10);
+    const newSeller = await prisma.$transaction(async (tx) => {
+      const seller = await tx.SellerProfile.create({
+        data: {
+          user_id,
+          status: "active",
+          ...dataSeller,
+        },
+      });
 
-    const newSeller = await prisma.seller.create({
-      data: {
-        username: data.username,
-        email: data.email,
-        password: hashPassword,
-        status: "active",
-      },
+      await tx.Skill.create({
+        data: {
+          seller_id: seller.id,
+          ...dataSkill,
+        },
+      });
+
+      await tx.UserRoleMap.create({
+        data: {
+          user_id,
+          role: "SELLER",
+        },
+      });
+
+      return seller;
     });
 
     return newSeller;
   } catch (err) {
-    console.error("Error creating seller:", err.message);
+    console.error(err);
     throw err;
   }
 };
 
-const updateSellerById = async (id, data) => {
+const updateSellerById = async (id, dataSeller, dataSkill) => {
   try {
-    const seller = await prisma.seller.findUnique({
+    const seller = await prisma.SellerProfile.findUnique({
       where: { id },
     });
 
     if (!seller) throw new NotFoundError(404, "Seller not found");
 
-    const updatedSeller = await prisma.seller.update({
-      where: { id },
-      data,
+    const updatedSeller = await prisma.$transaction(async (tx) => {
+      const seller = await tx.SellerProfile.create({
+        data: {
+          user_id,
+          status: "active",
+          ...dataSeller,
+        },
+      });
+
+      await tx.Skill.create({
+        data: {
+          seller_id: seller.id,
+          ...dataSkill,
+        },
+      });
+
+      await tx.UserRoleMap.create({
+        data: {
+          user_id,
+          role: "SELLER",
+        },
+      });
+
+      return seller;
     });
 
     return updatedSeller;
@@ -88,9 +123,26 @@ const updateSellerById = async (id, data) => {
 
 const deleteSellerById = async (id) => {
   try {
-    const seller = prisma.seller.delete({ where: { id } });
-    if (!seller) throw new NotFoundError("Seller not found");
-    return seller;
+    const sellerAvail = await prisma.SellerProfile.findUnique({
+      where: { id },
+    });
+
+    if (!sellerAvail) {
+      throw new NotFoundError("Seller not found!");
+    }
+
+    await prisma.UserRoleMap.delete({
+      where: {
+        user_id_role: {
+          user_id: sellerAvail.user_id,
+          role: "SELLER",
+        },
+      },
+    });
+
+    const deletedSeller = await prisma.SellerProfile.delete({ where: { id } });
+
+    return deletedSeller;
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
     throw err;
