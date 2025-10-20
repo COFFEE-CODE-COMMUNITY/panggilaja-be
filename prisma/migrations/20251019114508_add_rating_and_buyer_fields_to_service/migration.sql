@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Service" ADD COLUMN     "jumlah_pembeli" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "jumlah_rating" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "rata_rata_rating" DOUBLE PRECISION NOT NULL DEFAULT 0;

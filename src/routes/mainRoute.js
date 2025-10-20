@@ -22,4 +22,7 @@ router.use("/sellers", sellerRouter);
 // Order Route
 router.use("/orders", orderRouter);
 
+// Review Route
+router.use("/reviews");
+
 export default router;
