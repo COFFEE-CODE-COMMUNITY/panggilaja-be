@@ -23,6 +23,6 @@ router.use("/sellers", sellerRouter);
 router.use("/orders", orderRouter);
 
 // Review Route
-router.use("/reviews");
+// router.use("/reviews");
 
 export default router;

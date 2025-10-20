@@ -5,7 +5,7 @@ import validateToken from "../middleware/validateToken.js";
 const sellerRouter = Router();
 
 // Token Validation
-sellerRouter.use(validateToken);
+// sellerRouter.use(validateToken);
 
 // Seller Routes
 sellerRouter.get("/", sellerController.getAllSeller);

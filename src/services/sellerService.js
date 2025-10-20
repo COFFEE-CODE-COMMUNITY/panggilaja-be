@@ -4,7 +4,10 @@ import BadRequestError from "../exceptions/BadRequestError.js";
 
 const getAllSeller = async () => {
   try {
-    const sellers = prisma.SellerProfile.findMany();
+    const sellers = await prisma.SellerProfile.findMany();
+
+    if (!sellers) throw new NotFoundError("No sellers are listed");
+
     return sellers;
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
@@ -14,8 +17,12 @@ const getAllSeller = async () => {
 
 const getSellerById = async (id) => {
   try {
-    const seller = prisma.SellerProfile.findUnique({ where: { id } });
+    const seller = await prisma.SellerProfile.findUnique({
+      where: { id },
+    });
+
     if (!seller) throw new NotFoundError("Seller not found");
+
     return seller;
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
@@ -25,11 +32,19 @@ const getSellerById = async (id) => {
 
 const getAllServiceByIdSeller = async (sellerId) => {
   try {
-    const services = prisma.service.findMany({
+    const seller = await prisma.SellerProfile.findUnique({
+      where: { id: sellerId },
+    });
+
+    if (!seller) throw new NotFoundError("Seller not found");
+
+    const services = await prisma.service.findMany({
       where: { seller_id: sellerId },
     });
-    if (!services)
-      throw new NotFoundError(`Service by seller id: ${sellerId} not found`);
+
+    // if (services.length === 0)
+    //   throw new NotFoundError(`No services found for seller ID: ${sellerId}`);
+
     return services;
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
@@ -86,37 +101,30 @@ const updateSellerById = async (id, dataSeller, dataSkill) => {
       where: { id },
     });
 
-    if (!seller) throw new NotFoundError(404, "Seller not found");
+    if (!seller) {
+      throw new NotFoundError(404, "Seller not found");
+    }
 
     const updatedSeller = await prisma.$transaction(async (tx) => {
-      const seller = await tx.SellerProfile.create({
+      const updatedSeller = await tx.SellerProfile.update({
+        where: { id },
         data: {
-          user_id,
           status: "active",
           ...dataSeller,
         },
       });
 
-      await tx.Skill.create({
-        data: {
-          seller_id: seller.id,
-          ...dataSkill,
-        },
+      await tx.Skill.updateMany({
+        where: { seller_id: id },
+        data: { ...dataSkill },
       });
 
-      await tx.UserRoleMap.create({
-        data: {
-          user_id,
-          role: "SELLER",
-        },
-      });
-
-      return seller;
+      return updatedSeller;
     });
 
     return updatedSeller;
   } catch (err) {
-    console.error("Error update service:", err.message);
+    console.error("Error updating seller:", err.message);
     throw err;
   }
 };
