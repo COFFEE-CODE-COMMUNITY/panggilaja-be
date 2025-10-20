@@ -7,14 +7,10 @@ const orderRouter = Router();
 // Token Validation
 // orderRouter.use(validateToken);
 
-// Seller Routes
+// Service Routes
+orderRouter.post("/", orderController.addNewOrder);
 orderRouter.get("/:id", orderController.getOrderById);
-// orderRouter.get(
-//   "/:orderId/services",
-//   orderController.getAllServiceByIdorder
-// );
-// orderRouter.post("/", orderController.addNeworder);
-// orderRouter.put("/:id", orderController.updateorderById);
-// orderRouter.delete("/:id", orderController.deleteorderById);
+orderRouter.put("/:id/status", orderController.updateOrderById);
+orderRouter.delete("/:id", orderController.deleteOrderById);
 
 export default orderRouter;

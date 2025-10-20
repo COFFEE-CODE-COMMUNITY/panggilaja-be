@@ -1,96 +1,82 @@
 import prisma from "../database/prisma.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
-import bcrypt from "bcrypt";
-import BadRequestError from "../exceptions/BadRequestError.js";
 
 const getOrderById = async (id) => {
   try {
-    const order = prisma.order.findUnique({ where: { id } });
+    const order = await prisma.Order.findUnique({ where: { id } });
     if (!order) throw new NotFoundError("Order not found");
     return order;
   } catch (err) {
-    console.error("Errorfetching order:", err.message);
+    console.error("Error fetching order:", err.message);
     throw err;
   }
 };
 
-// const getAllServiceByIdSeller = async (sellerId) => {
-//   try {
-//     const services = prisma.service.findMany({
-//       where: { seller_id: sellerId },
-//     });
-//     if (!services)
-//       throw new NotFoundError(`Service by seller id: ${sellerId} not found`);
-//     return services;
-//   } catch (err) {
-//     console.error("Errorfetching seller:", err.message);
-//     throw err;
-//   }
-// };
+const addNewOrder = async (sellerId, serviceId, buyerId, totalHarga, data) => {
+  try {
+    const seller = await prisma.SellerProfile.findUnique({
+      where: { id: sellerId },
+    });
+    const service = await prisma.Service.findUnique({
+      where: { id: serviceId },
+    });
+    const buyer = await prisma.BuyerProfile.findUnique({
+      where: { id: buyerId },
+    });
 
-// const addNewSeller = async (data) => {
-//   try {
-//     const sellerAvail = await prisma.seller.findUnique({
-//       where: { email: data.email },
-//     });
+    if (!seller || !service || !buyer)
+      throw new NotFoundError(404, "Data not found");
 
-//     if (sellerAvail) {
-//       throw new BadRequestError("Email already registered", "AUTH_EMAIL_TAKEN");
-//     }
+    const newOrder = await prisma.Order.create({
+      data: {
+        seller_id: sellerId,
+        pesan_tambahan: data.pesan_tambahan,
+        total_harga: totalHarga,
+        service_id: serviceId,
+        buyer_id: buyerId,
+      },
+    });
 
-//     const hashPassword = await bcrypt.hash(data.password, 10);
+    return newOrder;
+  } catch (err) {
+    console.error("Error add new order:", err.message);
+    throw err;
+  }
+};
 
-//     const newSeller = await prisma.seller.create({
-//       data: {
-//         username: data.username,
-//         email: data.email,
-//         password: hashPassword,
-//         status: "active",
-//       },
-//     });
+const updateOrderById = async (id, data) => {
+  try {
+    const order = await prisma.Order.findUnique({
+      where: { id },
+    });
 
-//     return newSeller;
-//   } catch (err) {
-//     console.error("Error creating seller:", err.message);
-//     throw err;
-//   }
-// };
+    if (!order) throw new NotFoundError(404, "Order not found");
 
-// const updateSellerById = async (id, data) => {
-//   try {
-//     const seller = await prisma.seller.findUnique({
-//       where: { id },
-//     });
+    const updatedOrder = await prisma.Order.update({
+      where: { id },
+      data,
+    });
 
-//     if (!seller) throw new NotFoundError(404, "Seller not found");
+    return updatedOrder;
+  } catch (err) {
+    console.error("Error update order:", err.message);
+    throw err;
+  }
+};
 
-//     const updatedSeller = await prisma.seller.update({
-//       where: { id },
-//       data,
-//     });
-
-//     return updatedSeller;
-//   } catch (err) {
-//     console.error("Error update service:", err.message);
-//     throw err;
-//   }
-// };
-
-// const deleteSellerById = async (id) => {
-//   try {
-//     const seller = prisma.seller.delete({ where: { id } });
-//     if (!seller) throw new NotFoundError("Seller not found");
-//     return seller;
-//   } catch (err) {
-//     console.error("Errorfetching seller:", err.message);
-//     throw err;
-//   }
-// };
+const deleteOrderById = async (id) => {
+  try {
+    const order = await prisma.Order.delete({ where: { id } });
+    return order;
+  } catch (err) {
+    console.error("Error delete order:", err.message);
+    throw err;
+  }
+};
 
 export default {
   getOrderById,
-  // getAllServiceByIdSeller,
-  // addNewSeller,
-  // updateSellerById,
-  // deleteSellerById,
+  addNewOrder,
+  updateOrderById,
+  deleteOrderById,
 };

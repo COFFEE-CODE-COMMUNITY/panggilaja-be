@@ -14,73 +14,63 @@ const getOrderById = async (req, res, next) => {
   }
 };
 
-// const getAllServiceByIdSeller = async (req, res, next) => {
-//   try {
-//     const sellerId = req.params.sellerId;
-//     const result = await sellerService.getAllServiceByIdSeller(sellerId);
-//     res.status(200).json({
-//       status: "success",
-//       message: `Success Get All Service by Seller Id: ${sellerId}`,
-//       data: result,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+const addNewOrder = async (req, res, next) => {
+  try {
+    // const seller_id = req.user.id;
+    const sellerId = "910ca18c-575a-4a20-8f3e-b0f6dbb9b333";
+    const serviceId = "bdfc100b-7670-4512-9d09-c4be23f83c7b";
+    const buyerId = "91a57097-3112-4be4-9f9d-bb1220369d0f";
+    const totalHarga = 5000000;
+    const data = req.body;
+    const result = await orderService.addNewOrder(
+      sellerId,
+      serviceId,
+      buyerId,
+      totalHarga,
+      data
+    );
+    res.status(201).json({
+      status: "success",
+      message: "Order added successfully!",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-// const addNewSeller = async (req, res, next) => {
-//   try {
-//     const request = req.body;
-//     if (!request.username || !request.email || !request.password) {
-//       throw new BadRequestError(
-//         "All fields are mandatory",
-//         "MISSING_CREDENTIAL"
-//       );
-//     }
-//     const newSeller = await sellerService.addNewSeller(request);
-//     res.status(200).json({
-//       status: "success",
-//       message: "Account created",
-//       data: { seller: { _id: newSeller.id, email: newSeller.email } },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+const updateOrderById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const request = req.body;
+    const result = await orderService.updateOrderById(id, request);
+    res.status(200).json({
+      status: "success",
+      message: `Success Update Order by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-// const updateSellerById = async (req, res, next) => {
-//   try {
-//     const id = req.params.id;
-//     const request = req.body;
-//     const result = await sellerService.updateSellerById(id, request);
-//     res.status(200).json({
-//       status: "success",
-//       message: `Success Update Seller by Id: ${id}`,
-//       data: result,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const deleteSellerById = async (req, res, next) => {
-//   try {
-//     const id = req.params.id;
-//     const result = await sellerService.deleteSellerById(id);
-//     res.status(200).json({
-//       status: "success",
-//       message: `Success Delete Data Seller By Id: ${id}`,
-//       data: result,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+const deleteOrderById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const result = await orderService.deleteOrderById(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Delete Order by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export default {
   getOrderById,
-  // getAllServiceByIdSeller,
-  // addNewSeller,
-  // updateSellerById,
-  // deleteSellerById,
+  addNewOrder,
+  updateOrderById,
+  deleteOrderById,
 };
