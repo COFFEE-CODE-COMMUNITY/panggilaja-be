@@ -57,7 +57,6 @@ model User {
   ordersSeller   Order[]          @relation("SellerOrders")
   reviews        Review[]
   favorites      FavoriteService[]
-  skills         Skill[]
   documentations Documentation[]
 }
 
@@ -103,6 +102,7 @@ model SellerProfile {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
+  skill Skill[]
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
@@ -116,32 +116,36 @@ model Kategori {
 }
 
 model Service {
-  id           String           @id @default(uuid())
-  seller_id    String
-  nama_jasa    String
-  deskripsi    String
-  base_price   Float
-  top_price    Float
-  foto_product String
-  status       ServiceStatus
-  kategori_id  String
-  created_at   DateTime         @default(now())
-  updated_at   DateTime         @updatedAt
+  id                String           @id @default(uuid())
+  seller_id         String
+  nama_jasa         String
+  deskripsi         String
+  base_price        Float
+  top_price         Float
+  foto_product      String
+  status            ServiceStatus
+  kategori_id       String
+  rata_rata_rating  Float            @default(0)
+  jumlah_rating     Int              @default(0)
+  jumlah_pembeli    Int              @default(0)
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
 
-  kategori     Kategori         @relation(fields: [kategori_id], references: [id])
-  seller       User             @relation("SellerServices", fields: [seller_id], references: [id], onDelete: Cascade)
-  orders       Order[]
-  reviews      Review[]
-  favorites    FavoriteService[]
-  documentations Documentation[]
+  kategori          Kategori         @relation(fields: [kategori_id], references: [id])
+  seller            User             @relation("SellerServices", fields: [seller_id], references: [id], onDelete: Cascade)
+  orders            Order[]
+  reviews           Review[]
+  favorites         FavoriteService[]
+  documentations    Documentation[]
 }
+
 
 model Skill {
   id        String @id @default(uuid())
   seller_id String
   skill     String
 
-  seller User @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  sellerProfile SellerProfile @relation(fields: [seller_id], references: [id], onDelete: Cascade)
 }
 
 //

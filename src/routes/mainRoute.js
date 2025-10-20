@@ -14,4 +14,7 @@ router.use("/users", userRouter);
 // Service Route
 router.use("/services", serviceRouter);
 
+//Review Route
+router.use("/reviews");
+
 export default router;
