@@ -30,7 +30,7 @@ const getServiceById = async (req, res, next) => {
 const addItemService = async (req, res, next) => {
   try {
     // const seller_id = req.user.id;
-    const seller_id = "086b0e82-8018-4cb4-a290-c997d28ccbf6";
+    const seller_id = "910ca18c-575a-4a20-8f3e-b0f6dbb9b333";
     const request = req.body;
     const result = await serviceItemService.addItemService(seller_id, request);
     res.status(201).json({
