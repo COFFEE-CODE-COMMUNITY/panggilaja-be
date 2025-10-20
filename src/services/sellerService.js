@@ -157,6 +157,22 @@ const deleteSellerById = async (id) => {
   }
 };
 
+// Additional
+const getOrdersBySeller = async (id) => {
+  try {
+    const orders = await prisma.Order.findMany({
+      where: { seller_id: id },
+    });
+
+    if (!orders) throw new NotFoundError("Order not found");
+
+    return orders;
+  } catch (err) {
+    console.error("Errorfetching order:", err.message);
+    throw err;
+  }
+};
+
 export default {
   getAllSeller,
   getSellerById,
@@ -164,4 +180,5 @@ export default {
   addNewSeller,
   updateSellerById,
   deleteSellerById,
+  getOrdersBySeller,
 };

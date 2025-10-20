@@ -59,9 +59,42 @@ const deleteUserById = async (req, res, next) => {
   }
 };
 
+// Additional
+const getOrdersByUserId = async (req, res, next) => {
+  try {
+    const id = req.params.userId;
+    const result = await userService.getOrdersByUserId(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Orders by User Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Searching
+const getServicesByPlace = async (req, res, next) => {
+  try {
+    const id = req.params.userId;
+    const data = req.body;
+    const result = await userService.getServicesByPlace(id, data);
+    res.status(200).json({
+      status: "success",
+      message: `This is Services in Your Location`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getUserById,
   getAddressById,
   updateUserById,
   deleteUserById,
+  getOrdersByUserId,
+  getServicesByPlace,
 };

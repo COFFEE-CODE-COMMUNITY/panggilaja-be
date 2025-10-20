@@ -110,6 +110,21 @@ const deleteSellerById = async (req, res, next) => {
   }
 };
 
+// Additional
+const getOrdersBySeller = async (req, res, next) => {
+  try {
+    const id = req.params.sellerId;
+    const result = await sellerService.getOrdersBySeller(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Orders by Seller Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getAllSeller,
   getSellerById,
@@ -117,4 +132,5 @@ export default {
   addNewSeller,
   updateSellerById,
   deleteSellerById,
+  getOrdersBySeller,
 };

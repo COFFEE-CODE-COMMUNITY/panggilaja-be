@@ -18,4 +18,7 @@ sellerRouter.post("/", sellerController.addNewSeller);
 sellerRouter.put("/:id", sellerController.updateSellerById);
 sellerRouter.delete("/:id", sellerController.deleteSellerById);
 
+// Additional
+sellerRouter.get("/:sellerId/orders", sellerController.getOrdersBySeller);
+
 export default sellerRouter;
