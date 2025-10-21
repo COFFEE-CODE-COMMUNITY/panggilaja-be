@@ -137,7 +137,7 @@ const refreshAccessToken = async ({ refreshToken }) => {
     { expiresIn: "10m" }
   );
 
-  return { accessToken };
+  return accessToken;
 };
 
 const logoutUser = async ({ refreshToken }) => {
@@ -157,9 +157,61 @@ const logoutUser = async ({ refreshToken }) => {
   return { message: "Logout successful" };
 };
 
+async function switchUser(token) {
+  console.log(token);
+  const user = await prisma.user.findUnique({
+    where: { id: token.id },
+    include: { roles: true, buyerProfile: true, sellerProfile: true },
+  });
+
+  if (user.roles.length > 1) {
+    console.log(token);
+    if (token.roles === "BUYER") {
+      console.log("Masuk sini");
+      const payload = {
+        user: {
+          id: user.id,
+          id_seller: user.sellerProfile.id,
+          email: user.email,
+          username: user.username,
+          roles: "SELLER",
+        },
+      };
+      const newToken = jwt.sign(payload, config.jwt_key.access_key, {
+        expiresIn: "10m",
+      });
+
+      return newToken;
+    }
+
+    if (token.roles === "SELLER") {
+      const payload = {
+        user: {
+          id: user.id,
+          id_buyer: user.buyerProfile.id,
+          email: user.email,
+          username: user.username,
+          roles: "BUYER",
+        },
+      };
+      const newToken = jwt.sign(payload, config.jwt_key.access_key, {
+        expiresIn: "10m",
+      });
+
+      return newToken;
+    }
+  } else {
+    throw new UnauthorizedError(
+      "Akun seller/user tidak ditemukan",
+      "ACCOUNT_NOT_FOUND"
+    );
+  }
+}
+
 export default {
   registerUser,
   loginUser,
   refreshAccessToken,
   logoutUser,
+  switchUser,
 };

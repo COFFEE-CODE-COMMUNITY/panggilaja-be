@@ -6,7 +6,10 @@ const registerUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
-      throw new BadRequestError("All fields are mandatory", "MISSING_CREDENTIAL");
+      throw new BadRequestError(
+        "All fields are mandatory",
+        "MISSING_CREDENTIAL"
+      );
     }
     const newUser = await authService.registerUser(req.body);
     res.status(201).json({
@@ -14,7 +17,9 @@ const registerUser = async (req, res, next) => {
       message: "Account created",
       data: { user: { _id: newUser.id, email: newUser.email } },
     });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 };
 
 const loginUser = async (req, res, next) => {
@@ -31,18 +36,22 @@ const loginUser = async (req, res, next) => {
       message: "User login succesfully",
       data: { user: { accessToken: token.accessToken } },
     });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 };
 
 const refreshToken = async (req, res, next) => {
   try {
-    const accessToken = await authService.refreshToken(req.cookies);
+    const accessToken = await authService.refreshAccessToken(req.cookies);
     res.json({
       status: "success",
       message: "new access token created",
       data: { user: { accessToken } },
     });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 };
 
 const logoutUser = async (req, res, next) => {
@@ -50,24 +59,38 @@ const logoutUser = async (req, res, next) => {
     const out = await authService.logoutUser(req.cookies);
     if (out) {
       res.clearCookie("refreshToken");
-      res.json({ status: "success", message: "User logout successfuly", data: {} });
+      res.json({
+        status: "success",
+        message: "User logout successfuly",
+        data: {},
+      });
     }
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 };
 
 /** RESET PASSWORD FLOW **/
 const requestReset = async (req, res, next) => {
   try {
     await resetService.requestReset(req.body); // { email }
-    res.json({ status: "success", message: "Code has been sent to user", data: {} });
-  } catch (e) { next(e); }
+    res.json({
+      status: "success",
+      message: "Code has been sent to user",
+      data: {},
+    });
+  } catch (e) {
+    next(e);
+  }
 };
 
 const verifyReset = async (req, res, next) => {
   try {
     await resetService.verifyReset(req.body); // { email, resetCode }
     res.json({ status: "success", message: "Code valid", data: {} });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 };
 
 const resetPassword = async (req, res, next) => {
@@ -78,7 +101,22 @@ const resetPassword = async (req, res, next) => {
     }
     await resetService.resetPassword({ email, resetCode, newPassword });
     res.json({ status: "success", message: "Password updated", data: {} });
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
+};
+
+const switchUser = async (req, res, next) => {
+  try {
+    const newToken = await authService.switchUser(req.user);
+    res.json({
+      status: "success",
+      message: "new access token created",
+      data: { user: { accessToken: newToken } },
+    });
+  } catch (e) {
+    next(e);
+  }
 };
 
 export default {
@@ -89,4 +127,5 @@ export default {
   requestReset,
   verifyReset,
   resetPassword,
+  switchUser,
 };
