@@ -1,4 +1,5 @@
 import sellerService from "../services/sellerService.js";
+import UnauthorizedError from "../exceptions/UnauthorizedError.js";
 
 const getAllSeller = async (req, res, next) => {
   try {
@@ -16,6 +17,13 @@ const getAllSeller = async (req, res, next) => {
 const getSellerById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await sellerService.getSellerById(id);
     res.status(200).json({
       status: "success",

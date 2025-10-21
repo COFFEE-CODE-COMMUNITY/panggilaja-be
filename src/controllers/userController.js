@@ -1,8 +1,16 @@
 import userService from "../services/userService.js";
+import UnauthorizedError from "../exceptions/UnauthorizedError.js";
 
 const getUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await userService.getUserById(id);
     res.status(200).json({
       status: "success",
@@ -17,6 +25,13 @@ const getUserById = async (req, res, next) => {
 const getAddressById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await userService.getAddressById(id);
     res.status(200).json({
       status: "success",
@@ -31,6 +46,13 @@ const getAddressById = async (req, res, next) => {
 const updateUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const data = req.body;
 
     const result = await userService.updateUserById(id, data);
@@ -48,6 +70,13 @@ const updateUserById = async (req, res, next) => {
 const deleteUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await userService.deleteUserById(id);
     res.status(200).json({
       status: "success",
@@ -63,6 +92,13 @@ const deleteUserById = async (req, res, next) => {
 const getOrdersByUserId = async (req, res, next) => {
   try {
     const id = req.params.userId;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await userService.getOrdersByUserId(id);
     res.status(200).json({
       status: "success",
@@ -78,8 +114,15 @@ const getOrdersByUserId = async (req, res, next) => {
 const getServicesByPlace = async (req, res, next) => {
   try {
     const id = req.params.userId;
-    const data = req.body;
-    const result = await userService.getServicesByPlace(id, data);
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    const { kecamatan } = req.query;
+    const result = await userService.getServicesByPlace(id, { kecamatan });
     res.status(200).json({
       status: "success",
       message: `This is Services in Your Location`,

@@ -5,6 +5,14 @@ const getUserById = async (id) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        login_provider: true,
+        created_at: true,
+        updated_at: true,
+      },
     });
 
     if (!user) throw new NotFoundError("User not found");
@@ -59,7 +67,17 @@ const deleteUserById = async (id) => {
 
     if (!user) throw new NotFoundError("User not found");
 
-    const deleteAccount = prisma.user.delete({ where: { id } });
+    const deleteAccount = prisma.user.delete({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        login_provider: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
 
     return deleteAccount;
   } catch (err) {
@@ -71,11 +89,18 @@ const deleteUserById = async (id) => {
 // Additional
 const getOrdersByUserId = async (id) => {
   try {
-    const orders = await prisma.Order.findMany({
-      where: { buyer_id: id },
+    const buyerId = await prisma.BuyerProfile.findUnique({
+      where: { user_id: id },
+      select: { id: true },
     });
 
-    if (!orders) throw new NotFoundError("Orders not found");
+    if (!buyerId) throw new NotFoundError("Buyer not found");
+
+    const orders = await prisma.Order.findMany({
+      where: { buyer_id: buyerId.id },
+    });
+
+    if (orders.length === 0) throw new NotFoundError("No orders found");
 
     return orders;
   } catch (err) {
@@ -120,7 +145,20 @@ const getServicesByPlace = async (id, data) => {
     // Ambil semua service milik seller tersebut
     const sellerIds = sellers.map((s) => s.id);
     const services = await prisma.Service.findMany({
-      where: { seller_id: { in: sellerIds } },
+      where: {
+        seller_id: { in: sellerIds },
+      },
+      select: {
+        id: true,
+        nama_jasa: true,
+        deskripsi: true,
+        base_price: true,
+        top_price: true,
+        foto_product: true,
+        rata_rata_rating: true,
+        jumlah_rating: true,
+        jumlah_pembeli: true,
+      },
     });
 
     return services;
