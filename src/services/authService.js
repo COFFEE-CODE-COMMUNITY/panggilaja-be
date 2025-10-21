@@ -44,7 +44,7 @@ const registerUser = async ({ username, email, password }) => {
     id: newUser.id,
     email: newUser.email,
     username: newUser.username,
-    role: "USER",
+    role: "BUYER",
   };
 };
 
@@ -58,7 +58,7 @@ const loginUser = async ({ email, password }) => {
 
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { roles: true },
+    include: { roles: true, buyerProfile: true },
   });
   if (!user) throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
 
@@ -70,11 +70,14 @@ const loginUser = async ({ email, password }) => {
   const payload = {
     user: {
       id: user.id,
+      id_buyer: user.buyerProfile.id,
       email: user.email,
       username: user.username,
-      roles: user.roles.map((r) => r.role),
+      roles: "BUYER",
     },
   };
+
+  console.log(payload);
 
   const accessToken = jwt.sign(payload, config.jwt_key.access_key, {
     expiresIn: "10m",
