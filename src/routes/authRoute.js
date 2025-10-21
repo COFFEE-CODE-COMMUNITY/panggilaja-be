@@ -2,6 +2,7 @@ import { Router } from "express";
 import authController from "../controllers/authController.js";
 import validate from "../middleware/validate.js";
 import authValidation from "../validator/authValidation.js";
+import validateToken from "../middleware/validateToken.js";
 
 const authRouter = Router();
 
@@ -41,5 +42,7 @@ authRouter.post(
   validate(authValidation.resetPasswordSchema),
   authController.resetPassword
 );
+
+authRouter.post("/change-user", validateToken, authController.switchUser);
 
 export default authRouter;
