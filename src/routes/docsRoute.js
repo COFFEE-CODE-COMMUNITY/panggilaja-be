@@ -8,6 +8,7 @@ const docsRouter = Router();
 docsRouter.use(validateToken);
 
 // docs Routes
+docsRouter.post("/", docsController.addNewDocs);
 docsRouter.put("/:id", docsController.updateDocsById);
 docsRouter.delete("/:id", docsController.deleteDocsById);
 

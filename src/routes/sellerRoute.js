@@ -20,6 +20,5 @@ sellerRouter.get("/:id/orders", sellerController.getOrdersBySellerId);
 
 // Docs Routes
 sellerRouter.get("/:id/docs", sellerController.getDocsById);
-sellerRouter.post("/docs", sellerController.addNewDocs);
 
 export default sellerRouter;

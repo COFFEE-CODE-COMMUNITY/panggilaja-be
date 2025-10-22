@@ -184,21 +184,6 @@ const getDocsById = async (req, res, next) => {
   }
 };
 
-const addNewDocs = async (req, res, next) => {
-  try {
-    const id = req.user.id_seller;
-    const data = req.body;
-    const addNewDocs = await sellerService.addNewDocs(id, data);
-    res.status(200).json({
-      status: "success",
-      message: "Documentation added",
-      data: addNewDocs,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export default {
   getAllSeller,
   getSellerById,
@@ -208,5 +193,4 @@ export default {
   deleteSellerById,
   getOrdersBySellerId,
   getDocsById,
-  addNewDocs,
 };
