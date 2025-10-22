@@ -91,7 +91,7 @@ const deleteUserById = async (req, res, next) => {
 // Additional
 const getOrdersByUserId = async (req, res, next) => {
   try {
-    const id = req.params.userId;
+    const id = req.params.id;
     const loggedInUserId = req.user.id;
 
     // validasi id pada token dan parameter
@@ -113,7 +113,7 @@ const getOrdersByUserId = async (req, res, next) => {
 // Searching
 const getServicesByPlace = async (req, res, next) => {
   try {
-    const id = req.params.userId;
+    const id = req.params.id;
     const loggedInUserId = req.user.id;
 
     // validasi id pada token dan parameter
@@ -133,6 +133,43 @@ const getServicesByPlace = async (req, res, next) => {
   }
 };
 
+// Favorite
+const getFavoriteServices = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    const result = await userService.getFavoriteServices(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Current Address User by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addNewFavoriteService = async (req, res, next) => {
+  try {
+    const id = req.user.id;
+    const result = await userService.addNewFavoriteService(id);
+
+    res.status(200).json({
+      status: "success",
+      message: `Success Add Favorite Service`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getUserById,
   getAddressById,
@@ -140,4 +177,6 @@ export default {
   deleteUserById,
   getOrdersByUserId,
   getServicesByPlace,
+  getFavoriteServices,
+  addNewFavoriteService,
 };

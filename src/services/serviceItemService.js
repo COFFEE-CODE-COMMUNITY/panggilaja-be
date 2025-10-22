@@ -13,8 +13,12 @@ const getAllServices = async () => {
 
 const getServiceById = async (id) => {
   try {
-    const services = await prisma.service.findUnique({ where: { id } });
+    const services = await prisma.service.findUnique({
+      where: { id },
+    });
+
     if (!services) throw new NotFoundError("Service not found");
+
     return services;
   } catch (err) {
     console.error("Error fetching service:", err.message);

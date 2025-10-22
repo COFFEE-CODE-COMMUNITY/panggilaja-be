@@ -16,19 +16,9 @@ const getOrderById = async (req, res, next) => {
 
 const addNewOrder = async (req, res, next) => {
   try {
-    // const seller_id = req.user.id;
-    const sellerId = "910ca18c-575a-4a20-8f3e-b0f6dbb9b333";
-    const serviceId = "bdfc100b-7670-4512-9d09-c4be23f83c7b";
-    const buyerId = "91a57097-3112-4be4-9f9d-bb1220369d0f";
-    const totalHarga = 5000000;
+    const buyerId = req.user.id_buyer;
     const data = req.body;
-    const result = await orderService.addNewOrder(
-      sellerId,
-      serviceId,
-      buyerId,
-      totalHarga,
-      data
-    );
+    const result = await orderService.addNewOrder(buyerId, data);
     res.status(201).json({
       status: "success",
       message: "Order added successfully!",

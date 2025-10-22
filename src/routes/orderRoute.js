@@ -5,7 +5,7 @@ import validateToken from "../middleware/validateToken.js";
 const orderRouter = Router();
 
 // Token Validation
-// orderRouter.use(validateToken);
+orderRouter.use(validateToken);
 
 // Service Routes
 orderRouter.post("/", orderController.addNewOrder);

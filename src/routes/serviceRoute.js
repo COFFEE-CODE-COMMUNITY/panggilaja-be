@@ -5,7 +5,7 @@ import validateToken from "../middleware/validateToken.js";
 const serviceRouter = Router();
 
 // Token Validation
-// serviceRouter.use(validateToken);
+serviceRouter.use(validateToken);
 
 // Service Routes
 serviceRouter.get("/", serviceController.getAllServices);

@@ -12,27 +12,27 @@ const getOrderById = async (id) => {
   }
 };
 
-const addNewOrder = async (sellerId, serviceId, buyerId, totalHarga, data) => {
+const addNewOrder = async (buyerId, data) => {
   try {
-    const seller = await prisma.SellerProfile.findUnique({
-      where: { id: sellerId },
-    });
+    // cara sementara
+    const id_service = "cdd44653-e3d1-4a9c-bb6a-396468e28cef";
     const service = await prisma.Service.findUnique({
-      where: { id: serviceId },
+      where: { id: id_service },
+      select: {
+        id: true,
+        seller_id: true,
+      },
     });
-    const buyer = await prisma.BuyerProfile.findUnique({
-      where: { id: buyerId },
-    });
+    const total_harga = 500000;
 
-    if (!seller || !service || !buyer)
-      throw new NotFoundError(404, "Data not found");
+    if (!service) throw new NotFoundError(404, "Service not found");
 
     const newOrder = await prisma.Order.create({
       data: {
-        seller_id: sellerId,
+        seller_id: service.seller_id,
         pesan_tambahan: data.pesan_tambahan,
-        total_harga: totalHarga,
-        service_id: serviceId,
+        total_harga: total_harga,
+        service_id: service.id,
         buyer_id: buyerId,
       },
     });

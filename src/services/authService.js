@@ -185,6 +185,7 @@ async function switchUser(token) {
     }
 
     if (token.roles === "SELLER") {
+      console.log("Masuk sini");
       const payload = {
         user: {
           id: user.id,

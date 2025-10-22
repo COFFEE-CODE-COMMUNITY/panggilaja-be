@@ -3,27 +3,19 @@ import NotFoundError from "../exceptions/NotFoundError.js";
 
 const deleteFavoriteById = async (id) => {
   try {
-    const user = await prisma.FavoriteService.findUnique({
+    const favorite = await prisma.FavoriteService.findUnique({
       where: { id },
     });
 
-    if (!user) throw new NotFoundError("User not found");
+    if (!favorite) throw new NotFoundError("Favorite not found");
 
-    const deleteAccount = prisma.user.delete({
+    const deleteFavorite = prisma.FavoriteService.delete({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        login_provider: true,
-        created_at: true,
-        updated_at: true,
-      },
     });
 
-    return deleteAccount;
+    return deleteFavorite;
   } catch (err) {
-    console.error("Error delete user:", err.message);
+    console.error("Error delete favorite:", err.message);
     throw err;
   }
 };

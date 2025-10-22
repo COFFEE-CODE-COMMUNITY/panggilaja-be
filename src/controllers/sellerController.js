@@ -17,10 +17,10 @@ const getAllSeller = async (req, res, next) => {
 const getSellerById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const loggedInUserId = req.user.id;
+    const loggedInSellerId = req.user.id_seller;
 
     // validasi id pada token dan parameter
-    if (id !== loggedInUserId) {
+    if (id !== loggedInSellerId) {
       throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
     }
 
@@ -37,11 +37,18 @@ const getSellerById = async (req, res, next) => {
 
 const getAllServiceByIdSeller = async (req, res, next) => {
   try {
-    const sellerId = req.params.sellerId;
-    const result = await sellerService.getAllServiceByIdSeller(sellerId);
+    const id = req.params.id;
+    const loggedInSellerId = req.user.id_seller;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInSellerId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    const result = await sellerService.getAllServiceByIdSeller(id);
     res.status(200).json({
       status: "success",
-      message: `Success Get All Service by Seller Id: ${sellerId}`,
+      message: `Success Get All Service by Seller Id: ${id}`,
       data: result,
     });
   } catch (error) {
@@ -78,8 +85,14 @@ const addNewSeller = async (req, res, next) => {
 
 const updateSellerById = async (req, res, next) => {
   try {
-    // const sellerId = req.user.id;
-    const sellerId = "3ab63dcc-6229-49f8-b4af-ce6da7e0d37e";
+    const id = req.params.id;
+    const loggedInSellerId = req.user.id_seller;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInSellerId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const dataSeller = {
       deskripsi_toko: req.body.deskripsi_toko,
       foto_toko: req.body.foto_toko,
@@ -90,7 +103,7 @@ const updateSellerById = async (req, res, next) => {
       skill: req.body.skill,
     };
     const UpdateSeller = await sellerService.updateSellerById(
-      sellerId,
+      id,
       dataSeller,
       dataSkill
     );
@@ -107,6 +120,13 @@ const updateSellerById = async (req, res, next) => {
 const deleteSellerById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInSellerId = req.user.id_seller;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInSellerId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await sellerService.deleteSellerById(id);
     res.status(200).json({
       status: "success",
@@ -119,14 +139,60 @@ const deleteSellerById = async (req, res, next) => {
 };
 
 // Additional
-const getOrdersBySeller = async (req, res, next) => {
+const getOrdersBySellerId = async (req, res, next) => {
   try {
-    const id = req.params.sellerId;
-    const result = await sellerService.getOrdersBySeller(id);
+    const id = req.params.id;
+    const loggedInSellerId = req.user.id_seller;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInSellerId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    const result = await sellerService.getOrdersBySellerId(id);
     res.status(200).json({
       status: "success",
       message: `Success Get Orders by Seller Id: ${id}`,
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Documentation
+const getDocsById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const loggedInSellerId = req.user.id_seller;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInSellerId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    console.log(id);
+    const result = await sellerService.getDocsById(id);
+
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Docs by Seller Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addNewDocs = async (req, res, next) => {
+  try {
+    const id = req.user.id_seller;
+    const data = req.body;
+    const addNewDocs = await sellerService.addNewDocs(id, data);
+    res.status(200).json({
+      status: "success",
+      message: "Documentation added",
+      data: addNewDocs,
     });
   } catch (error) {
     next(error);
@@ -140,5 +206,7 @@ export default {
   addNewSeller,
   updateSellerById,
   deleteSellerById,
-  getOrdersBySeller,
+  getOrdersBySellerId,
+  getDocsById,
+  addNewDocs,
 };

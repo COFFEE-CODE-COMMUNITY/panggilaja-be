@@ -14,9 +14,13 @@ userRouter.put("/:id", userController.updateUserById);
 userRouter.delete("/:id", userController.deleteUserById);
 
 // Additional
-userRouter.get("/:userId/orders", userController.getOrdersByUserId);
+userRouter.get("/:id/orders", userController.getOrdersByUserId);
 
 // Searching
-userRouter.get("/:userId/services", userController.getServicesByPlace);
+userRouter.get("/:id/services", userController.getServicesByPlace);
+
+// Favorite
+userRouter.post("/favorites", userController.addNewFavoriteService);
+userRouter.get("/:id/favorites", userController.getFavoriteServices);
 
 export default userRouter;

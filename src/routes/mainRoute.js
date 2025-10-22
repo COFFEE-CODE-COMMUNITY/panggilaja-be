@@ -5,6 +5,7 @@ import serviceRouter from "./serviceRoute.js";
 import sellerRouter from "./sellerRoute.js";
 import orderRouter from "./orderRoute.js";
 import favoriteRouter from "./favoriteRoute.js";
+import docsRouter from "./docsRoute.js";
 
 const router = Router();
 
@@ -22,6 +23,9 @@ router.use("/sellers", sellerRouter);
 
 // Order Route
 router.use("/orders", orderRouter);
+
+// Documentation Route
+router.use("/docs", docsRouter);
 
 // Favorite Route
 router.use("/favorites", favoriteRouter);

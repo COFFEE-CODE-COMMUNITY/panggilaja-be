@@ -158,7 +158,7 @@ const deleteSellerById = async (id) => {
 };
 
 // Additional
-const getOrdersBySeller = async (id) => {
+const getOrdersBySellerId = async (id) => {
   try {
     const orders = await prisma.Order.findMany({
       where: { seller_id: id },
@@ -173,6 +173,44 @@ const getOrdersBySeller = async (id) => {
   }
 };
 
+// Documentation
+const getDocsById = async (id) => {
+  try {
+    const docs = await prisma.Documentation.findMany({
+      where: { seller_id: id },
+    });
+
+    return docs;
+  } catch (err) {
+    console.error("Errorfetching docs:", err.message);
+    throw err;
+  }
+};
+
+const addNewDocs = async (id, data) => {
+  try {
+    const sellerAvail = await prisma.SellerProfile.findUnique({
+      where: { id },
+    });
+
+    if (!sellerAvail) throw new NotFoundError("Seller not found");
+
+    const newDocument = await prisma.Documentation.create({
+      data: {
+        // cara sementara
+        service_id: "cdd44653-e3d1-4a9c-bb6a-396468e28cef",
+        seller_id: id,
+        foto_testimoni: data.foto_testimoni,
+      },
+    });
+
+    return newDocument;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
 export default {
   getAllSeller,
   getSellerById,
@@ -180,5 +218,7 @@ export default {
   addNewSeller,
   updateSellerById,
   deleteSellerById,
-  getOrdersBySeller,
+  getOrdersBySellerId,
+  getDocsById,
+  addNewDocs,
 };

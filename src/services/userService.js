@@ -67,21 +67,69 @@ const deleteUserById = async (id) => {
 
     if (!user) throw new NotFoundError("User not found");
 
-    const deleteAccount = prisma.user.delete({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        login_provider: true,
-        created_at: true,
-        updated_at: true,
-      },
+    const buyer = await prisma.buyerProfile.findUnique({
+      where: { user_id: id },
     });
 
-    return deleteAccount;
+    const seller = await prisma.sellerProfile.findUnique({
+      where: { user_id: id },
+    });
+
+    const deletedAccount = await prisma.$transaction(async (tx) => {
+      // Jika user adalah buyer → hapus semua data yang berelasi dengan buyer
+      if (buyer) {
+        await tx.order.deleteMany({
+          where: { buyer_id: buyer.id },
+        });
+
+        await tx.buyerProfile.delete({
+          where: { user_id: id },
+        });
+      }
+
+      // Jika user adalah seller → hapus semua data yang berelasi dengan seller
+      if (seller) {
+        await tx.order.deleteMany({
+          where: { seller_id: seller.id },
+        });
+
+        await tx.service.deleteMany({
+          where: { seller_id: seller.id },
+        });
+
+        await tx.skill.deleteMany({
+          where: { seller_id: seller.id },
+        });
+
+        await tx.sellerProfile.delete({
+          where: { user_id: id },
+        });
+      }
+
+      // Hapus mapping role jika ada
+      await tx.userRoleMap.deleteMany({
+        where: { user_id: id },
+      });
+
+      // Terakhir, hapus akun user utama
+      const account = await tx.user.delete({
+        where: { id },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          login_provider: true,
+          created_at: true,
+          updated_at: true,
+        },
+      });
+
+      return account;
+    });
+
+    return deletedAccount;
   } catch (err) {
-    console.error("Error delete user:", err.message);
+    console.error("❌ Error deleting user:", err.message);
     throw err;
   }
 };
@@ -100,7 +148,7 @@ const getOrdersByUserId = async (id) => {
       where: { buyer_id: buyerId.id },
     });
 
-    if (orders.length === 0) throw new NotFoundError("No orders found");
+    // if (orders.length === 0) throw new NotFoundError("No orders found");
 
     return orders;
   } catch (err) {
@@ -126,7 +174,7 @@ const getServicesByPlace = async (id, data) => {
     });
 
     if (buyers.length === 0) {
-      throw new NotFoundError("No users found in this area");
+      throw new NotFoundError("No service found in this area");
     }
 
     // Ambil semua user_id dari buyer di lokasi itu
@@ -168,6 +216,43 @@ const getServicesByPlace = async (id, data) => {
   }
 };
 
+// Favorite
+const getFavoriteServices = async (id) => {
+  try {
+    const FavoriteService = await prisma.FavoriteService.findMany({
+      where: { user_id: id },
+    });
+
+    // if (!FavoriteService) throw new NotFoundError("Favorite service not found");
+
+    return FavoriteService;
+  } catch (err) {
+    console.error("Error fetching address user:", err.message);
+    throw err;
+  }
+};
+
+const addNewFavoriteService = async (id) => {
+  try {
+    // cara sementara
+    const serviceId = "cdd44653-e3d1-4a9c-bb6a-396468e28cef";
+
+    if (!serviceId) throw new NotFoundError("Service not found");
+
+    const addFavorite = await prisma.FavoriteService.create({
+      data: {
+        user_id: id,
+        service_id: serviceId,
+      },
+    });
+
+    return addFavorite;
+  } catch (err) {
+    console.error("Error add favorite:", err.message);
+    throw err;
+  }
+};
+
 export default {
   getUserById,
   getAddressById,
@@ -175,4 +260,6 @@ export default {
   deleteUserById,
   getOrdersByUserId,
   getServicesByPlace,
+  getFavoriteServices,
+  addNewFavoriteService,
 };
