@@ -5,12 +5,22 @@ import errorMiddleware from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import session from "express-session";
+import passport from "./utils/oauth/passport.js";
 
 const createApp = () => {
   const app = express();
 
   // Middleware
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "secret",
+      resave: false,
+      saveUninitialized: false,
+    })
+  );
+  app.use(passport.initialize());
+  app.use(passport.session());
   app.use(express.json());
   app.use(cookieParser());
   app.use(express.urlencoded({ extended: false }));

@@ -208,10 +208,53 @@ async function switchUser(token) {
   }
 }
 
+async function findOrCreateUserGoogle(profile) {
+  const email = profile.emails?.[0]?.value;
+  const googleId = profile.id;
+
+  // Cari user berdasarkan oauth_id atau email
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [{ oauth_id: googleId }, { email: email }],
+    },
+  });
+
+  if (!user) {
+    // Jika belum ada, buat user baru
+    user = await prisma.user.create({
+      data: {
+        email: email,
+        password: "", // kosong untuk akun google
+        username: profile.displayName,
+        oauth_id: googleId,
+        login_provider: "google",
+        roles: {
+          create: { role: "USER" },
+        },
+        buyerProfile: {
+          create: { fullname: profile.displayName },
+        },
+      },
+      include: { roles: true, buyerProfile: true },
+    });
+  }
+
+  return user;
+}
+
+async function findUserById(id) {
+  return prisma.user.findUnique({
+    where: { id },
+    include: { roles: true, buyerProfile: true },
+  });
+}
+
 export default {
   registerUser,
   loginUser,
   refreshAccessToken,
   logoutUser,
   switchUser,
+  findOrCreateUserGoogle,
+  findUserById,
 };
