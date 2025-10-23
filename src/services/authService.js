@@ -58,8 +58,10 @@ const loginUser = async ({ email, password }) => {
 
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { roles: true, buyerProfile: true },
+    include: { roles: true, buyerProfile: true, sellerProfile: true },
   });
+
+  console.log(user);
   if (!user) throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
 
   const isValid = await bcrypt.compare(password, user.password || "");

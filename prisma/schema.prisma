@@ -73,6 +73,7 @@ model BuyerProfile {
   id          String   @id @default(uuid())
   user_id     String   @unique
   fullname    String?
+  foto_buyer  String?
   total_order Int      @default(0)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
