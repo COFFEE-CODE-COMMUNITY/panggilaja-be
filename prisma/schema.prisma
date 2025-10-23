@@ -161,7 +161,6 @@ model Service {
   documentations    Documentation[]
 }
 
-
 model Skill {
   id        String @id @default(uuid())
   seller_id String
