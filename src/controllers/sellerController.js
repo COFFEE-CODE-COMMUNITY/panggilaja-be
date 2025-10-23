@@ -59,19 +59,22 @@ const getAllServiceByIdSeller = async (req, res, next) => {
 const addNewSeller = async (req, res, next) => {
   try {
     const user_id = req.user.id;
+    const file = req.file;
+    const jsonData = JSON.parse(req.body.data);
     const dataSeller = {
-      deskripsi_toko: req.body.deskripsi_toko,
-      foto_toko: req.body.foto_toko,
-      kategori_toko: req.body.kategori_toko,
-      pengalaman: req.body.pengalaman,
+      deskripsi_toko: jsonData.deskripsi_toko,
+      foto_toko: jsonData.foto_toko,
+      kategori_toko: jsonData.kategori_toko,
+      pengalaman: jsonData.pengalaman,
     };
     const dataSkill = {
-      skill: req.body.skill,
+      skill: jsonData.skill,
     };
     const addNewSeller = await sellerService.addNewSeller(
       user_id,
       dataSeller,
-      dataSkill
+      dataSkill,
+      file
     );
     res.status(200).json({
       status: "success",

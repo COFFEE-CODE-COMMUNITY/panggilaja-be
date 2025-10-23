@@ -74,23 +74,31 @@ model BuyerProfile {
   user_id     String   @unique
   fullname    String?
   total_order Int      @default(0)
-  foto_buyer  String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  ordersBuyer    Order[]
+  alamat          AlamatBuyer[]
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model AlamatBuyer{
+  id          String   @id @default(uuid())
+  id_buyer    String  
   alamat      String?
   provinsi    String?
   kota        String?
   kecamatan   String?
   kode_pos    String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
 
-  ordersBuyer    Order[]
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  buyer       BuyerProfile  @relation(fields: [id_buyer], references: [id], onDelete: Cascade)
 }
 
 model SellerProfile {
   id               String   @id @default(uuid())
   user_id          String   @unique
   status           String   @default("active")
+  nama_toko        String 
   deskripsi_toko   String?
   foto_toko        String?
   kategori_toko    String?
@@ -103,7 +111,20 @@ model SellerProfile {
   services         Service[]
   ordersSeller     Order[]
   documentations   Documentation[]
+  alamat            AlamatSeller?
   user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model AlamatSeller{
+  id          String   @id @default(uuid())
+  id_seller   String   @unique
+  alamat      String?
+  provinsi    String?
+  kota        String?
+  kecamatan   String?
+  kode_pos    String?
+
+  seller       SellerProfile  @relation(fields: [id_seller], references: [id], onDelete: Cascade)
 }
 
 //
@@ -122,7 +143,7 @@ model Service {
   deskripsi         String
   base_price        Float
   top_price         Float
-  foto_product      String
+  foto_product      String?
   status            ServiceStatus
   kategori_id       String
   rata_rata_rating  Float            @default(0)

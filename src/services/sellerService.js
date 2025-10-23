@@ -1,6 +1,8 @@
 import prisma from "../database/prisma.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
 import BadRequestError from "../exceptions/BadRequestError.js";
+import { profileSeller } from "../utils/filePath.js";
+import uploadUserAsset from "./uploadFileService.js";
 
 const getAllSeller = async () => {
   try {
@@ -42,9 +44,6 @@ const getAllServiceByIdSeller = async (sellerId) => {
       where: { seller_id: sellerId },
     });
 
-    // if (services.length === 0)
-    //   throw new NotFoundError(`No services found for seller ID: ${sellerId}`);
-
     return services;
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
@@ -52,7 +51,7 @@ const getAllServiceByIdSeller = async (sellerId) => {
   }
 };
 
-const addNewSeller = async (user_id, dataSeller, dataSkill) => {
+const addNewSeller = async (user_id, dataSeller, dataSkill, file) => {
   try {
     const sellerAvail = await prisma.SellerProfile.findUnique({
       where: { user_id },
@@ -88,7 +87,20 @@ const addNewSeller = async (user_id, dataSeller, dataSkill) => {
       return seller;
     });
 
-    return newSeller;
+    const fileName = `profile_${Date.now()}.jpg`;
+
+    const filePath = profileSeller(user_id, newSeller.id, fileName);
+
+    const uploadResult = await uploadUserAsset(file, filePath);
+
+    const updateProfile = await prisma.SellerProfile.update({
+      where: { id: newSeller.id },
+      data: {
+        foto_toko: uploadResult.url,
+      },
+    });
+
+    return updateProfile;
   } catch (err) {
     console.error(err);
     throw err;

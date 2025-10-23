@@ -1,6 +1,7 @@
 import { Router } from "express";
 import sellerController from "../controllers/sellerController.js";
 import validateToken from "../middleware/validateToken.js";
+import upload from "../middleware/upload.js";
 
 const sellerRouter = Router();
 
@@ -11,7 +12,7 @@ sellerRouter.use(validateToken);
 sellerRouter.get("/", sellerController.getAllSeller);
 sellerRouter.get("/:id", sellerController.getSellerById);
 sellerRouter.get("/:id/services", sellerController.getAllServiceByIdSeller);
-sellerRouter.post("/", sellerController.addNewSeller);
+sellerRouter.post("/", upload.single("file"), sellerController.addNewSeller);
 sellerRouter.put("/:id", sellerController.updateSellerById);
 sellerRouter.delete("/:id", sellerController.deleteSellerById);
 

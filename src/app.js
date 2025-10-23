@@ -5,24 +5,28 @@ import errorMiddleware from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+// import oauthRouter from "./routes/oauthService.js";
 
 const createApp = () => {
   const app = express();
 
-  // Middleware
-  app.use(express.json());
   app.use(cookieParser());
+  app.use(
+    cors({
+      origin: "http://localhost:5173",
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+
+  app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(morgan("dev"));
   app.use(helmet());
-  app.use(cors());
-
-  // Routes
   app.use("/api", routes);
-
-  // Error Handling
   app.use(errorMiddleware);
+
 
   return app;
 };
