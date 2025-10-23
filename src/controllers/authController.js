@@ -24,17 +24,28 @@ const registerUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
   try {
-    const token = await authService.loginUser(req.body);
-    res.cookie("refreshToken", token.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 365 * 24 * 60 * 60 * 1000,
+    // ⚠️ PERBAIKAN: Destructure token dengan benar
+    const { accessToken, refreshToken, user } = await authService.loginUser(req.body);
+    
+    // Set refresh token di cookie (HTTP-only untuk keamanan)
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true, // ✅ Ubah ke true untuk keamanan
+      secure: process.env.NODE_ENV === "production", // true kalau production (HTTPS)
+      sameSite: "lax", // penting untuk cross-origin
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 tahun
     });
+
+    // Access token dikirim di response body (akan disimpan di localStorage)
     res.status(200).json({
       status: "success",
-      message: "User login succesfully",
-      data: { user: { accessToken: token.accessToken } },
+      message: "User login successfully",
+      data: { 
+        user: { 
+          accessToken,
+          userInfo: user // info user untuk disimpan di redux
+        } 
+      },
     });
   } catch (e) {
     next(e);
@@ -43,28 +54,53 @@ const loginUser = async (req, res, next) => {
 
 const refreshToken = async (req, res, next) => {
   try {
-    const accessToken = await authService.refreshAccessToken(req.cookies);
-    res.json({
+    console.log("🔄 Refresh token endpoint dipanggil");
+    console.log("Cookies:", req.cookies);
+    
+    const { refreshToken } = req.cookies;
+    
+    if (!refreshToken) {
+      console.error("❌ Refresh token tidak ditemukan di cookies");
+      throw new BadRequestError("Refresh token missing", "TOKEN_MISSING");
+    }
+
+    console.log("✅ Refresh token ditemukan, memproses...");
+    const accessToken = await authService.refreshAccessToken({ refreshToken });
+
+    console.log("✅ Access token baru berhasil dibuat");
+    res.status(200).json({
       status: "success",
-      message: "new access token created",
-      data: { user: { accessToken } },
+      message: "New access token created",
+      data: { accessToken },
     });
   } catch (e) {
+    console.error("❌ Error saat refresh token:", e);
     next(e);
   }
 };
 
 const logoutUser = async (req, res, next) => {
   try {
-    const out = await authService.logoutUser(req.cookies);
-    if (out) {
-      res.clearCookie("refreshToken");
-      res.json({
-        status: "success",
-        message: "User logout successfuly",
-        data: {},
-      });
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      throw new BadRequestError("No token provided", "TOKEN_MISSING");
     }
+
+    await authService.logoutUser({ refreshToken });
+
+    // Clear cookie
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    res.json({
+      status: "success",
+      message: "User logout successfully",
+      data: {},
+    });
   } catch (e) {
     next(e);
   }
@@ -73,7 +109,7 @@ const logoutUser = async (req, res, next) => {
 /** RESET PASSWORD FLOW **/
 const requestReset = async (req, res, next) => {
   try {
-    await resetService.requestReset(req.body); // { email }
+    await resetService.requestReset(req.body);
     res.json({
       status: "success",
       message: "Code has been sent to user",
@@ -86,7 +122,7 @@ const requestReset = async (req, res, next) => {
 
 const verifyReset = async (req, res, next) => {
   try {
-    await resetService.verifyReset(req.body); // { email, resetCode }
+    await resetService.verifyReset(req.body);
     res.json({ status: "success", message: "Code valid", data: {} });
   } catch (e) {
     next(e);
@@ -111,7 +147,7 @@ const switchUser = async (req, res, next) => {
     const newToken = await authService.switchUser(req.user);
     res.json({
       status: "success",
-      message: "new access token created",
+      message: "New access token created",
       data: { user: { accessToken: newToken } },
     });
   } catch (e) {
