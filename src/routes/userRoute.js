@@ -23,4 +23,7 @@ userRouter.get("/:id/services", userController.getServicesByPlace);
 userRouter.post("/favorites", userController.addNewFavoriteService);
 userRouter.get("/:id/favorites", userController.getFavoriteServices);
 
+// Seller
+userRouter.get("/:sellerId/seller", userController.getSellerById);
+
 export default userRouter;

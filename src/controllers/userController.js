@@ -170,6 +170,22 @@ const addNewFavoriteService = async (req, res, next) => {
   }
 };
 
+// Seller
+const getSellerById = async (req, res, next) => {
+  try {
+    const id = req.params.sellerId;
+
+    const result = await userService.getSellerById(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Seller by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getUserById,
   getAddressById,
@@ -179,4 +195,5 @@ export default {
   getServicesByPlace,
   getFavoriteServices,
   addNewFavoriteService,
+  getSellerById,
 };

@@ -3,8 +3,23 @@ import NotFoundError from "../exceptions/NotFoundError.js";
 
 const getAllServices = async () => {
   try {
-    const services = await prisma.service.findMany();
-    return services;
+    const services = await prisma.service.findMany({
+      include: {
+        seller: {
+          select: {
+            nama_toko: true,
+          },
+        },
+      },
+    });
+
+    // ubah hasil jadi lebih simpel (kalau mau)
+    const response = services.map((service) => ({
+      ...service,
+      seller_name: service.seller.nama_toko,
+    }));
+
+    return response;
   } catch (err) {
     console.error("Error fetching service:", err.message);
     throw err;

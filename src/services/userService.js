@@ -253,6 +253,22 @@ const addNewFavoriteService = async (id) => {
   }
 };
 
+// Seller
+const getSellerById = async (id) => {
+  try {
+    const seller = await prisma.SellerProfile.findUnique({
+      where: { id },
+    });
+
+    if (!seller) throw new NotFoundError("Seller not found");
+
+    return seller;
+  } catch (err) {
+    console.error("Errorfetching seller:", err.message);
+    throw err;
+  }
+};
+
 export default {
   getUserById,
   getAddressById,
@@ -262,4 +278,5 @@ export default {
   getServicesByPlace,
   getFavoriteServices,
   addNewFavoriteService,
+  getSellerById,
 };
