@@ -1,5 +1,7 @@
 import prisma from "../database/prisma.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
+import { servicePhoto } from "../utils/filePath.js";
+import uploadUserAsset from "./uploadFileService.js";
 
 const getAllServices = async () => {
   try {
@@ -26,7 +28,7 @@ const getServiceById = async (id) => {
   }
 };
 
-const addItemService = async (seller_id, data) => {
+const addItemService = async (seller_id, data, file) => {
   try {
     const seller = await prisma.SellerProfile.findUnique({
       where: { id: seller_id },
@@ -41,13 +43,29 @@ const addItemService = async (seller_id, data) => {
         deskripsi: data.deskripsi,
         base_price: data.base_price,
         top_price: data.top_price,
-        foto_product: data.foto_product,
+        foto_product: "init.jpg",
         status: "active",
-        kategori_id: "6387fa09-a02a-4fe4-bb5c-19690f2bd937",
+        kategori_id: data.kategori_id,
       },
     });
 
-    return newService;
+    const fileName = `service_${Date.now()}.jpg`;
+
+    const filePath = servicePhoto(
+      seller.user_id,
+      seller_id,
+      newService.id,
+      fileName
+    );
+
+    const uploadResult = await uploadUserAsset(file, filePath);
+
+    const updatedService = await prisma.service.update({
+      where: { id: newService.id },
+      data: { foto_product: uploadResult.url },
+    });
+
+    return updatedService;
   } catch (err) {
     console.error("Error add new service:", err.message);
     throw err;
@@ -84,10 +102,29 @@ const deleteServiceById = async (id) => {
   }
 };
 
+const getAllKategori = async () => {
+  try {
+    console.log("Masuk sini");
+    const kategoriList = await prisma.kategori.findMany({
+      orderBy: {
+        kategori: "asc", // urutkan alfabetis biar rapi
+      },
+    });
+
+    console.log(kategoriList);
+
+    return kategoriList;
+  } catch (error) {
+    console.error("Error fetching kategori:", error);
+    throw new Error("Gagal mengambil data kategori");
+  }
+};
+
 export default {
   getAllServices,
   getServiceById,
   addItemService,
   updateServiceById,
   deleteServiceById,
+  getAllKategori,
 };

@@ -3,8 +3,9 @@ import documentService from "../services/docsService.js";
 const addNewDocs = async (req, res, next) => {
   try {
     const id = req.user.id_seller;
-    const data = req.body;
-    const addNewDocs = await documentService.addNewDocs(id, data);
+    const file = req.file;
+    // const jsonData = JSON.parse(req.body.data);
+    const addNewDocs = await documentService.addNewDocs(id, file);
     res.status(200).json({
       status: "success",
       message: "Documentation added",

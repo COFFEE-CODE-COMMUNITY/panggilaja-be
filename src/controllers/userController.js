@@ -1,5 +1,6 @@
 import userService from "../services/userService.js";
 import UnauthorizedError from "../exceptions/UnauthorizedError.js";
+import BadRequestError from "../exceptions/BadRequestError.js";
 
 const getUserById = async (req, res, next) => {
   try {
@@ -45,7 +46,8 @@ const getAddressById = async (req, res, next) => {
 
 const updateUserById = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
+    const file = req.file;
     const loggedInUserId = req.user.id;
 
     // validasi id pada token dan parameter
@@ -53,9 +55,13 @@ const updateUserById = async (req, res, next) => {
       throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
     }
 
-    const data = req.body;
+    if (!file) {
+      throw new BadRequestError("File required!", "BAD_PAYLOAD");
+    }
 
-    const result = await userService.updateUserById(id, data);
+    const jsonData = JSON.parse(req.body.data);
+
+    const result = await userService.updateUserById(id, jsonData, file);
 
     res.status(200).json({
       status: "success",

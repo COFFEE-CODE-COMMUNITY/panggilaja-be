@@ -1,5 +1,7 @@
 import prisma from "../database/prisma.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
+import { profileBuyer } from "../utils/filePath.js";
+import uploadUserAsset from "./uploadFileService.js";
 
 const getUserById = async (id) => {
   try {
@@ -39,7 +41,7 @@ const getAddressById = async (id) => {
   }
 };
 
-const updateUserById = async (id, data) => {
+const updateUserById = async (id, data, file) => {
   try {
     const buyerProfile = await prisma.BuyerProfile.findUnique({
       where: { user_id: id },
@@ -47,11 +49,18 @@ const updateUserById = async (id, data) => {
 
     if (!buyerProfile) throw new NotFoundError("User not found");
 
+    const fileName = `profile_${Date.now()}.jpg`;
+
+    const filePath = profileBuyer(id, buyerProfile.id, fileName, fileName);
+
+    const uploadResult = await uploadUserAsset(file, filePath);
+
     const updatedUserProfile = await prisma.BuyerProfile.update({
       where: { user_id: id },
-      data,
+      data: { ...data, foto_buyer: uploadResult.url },
     });
 
+    console.log(updatedUserProfile);
     return updatedUserProfile;
   } catch (err) {
     console.error("Error update user:", err.message);

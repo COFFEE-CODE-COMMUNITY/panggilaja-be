@@ -1,7 +1,9 @@
 import prisma from "../database/prisma.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
+import uploadUserAsset from "./uploadFileService.js";
+import { dokumentasiPhoto } from "../utils/filePath.js";
 
-const addNewDocs = async (id, data) => {
+const addNewDocs = async (id, file) => {
   try {
     const sellerAvail = await prisma.SellerProfile.findUnique({
       where: { id },
@@ -12,13 +14,28 @@ const addNewDocs = async (id, data) => {
     const newDocument = await prisma.Documentation.create({
       data: {
         // cara sementara
-        service_id: "cdd44653-e3d1-4a9c-bb6a-396468e28cef",
+        service_id: "c31c906c-6797-4204-94f9-d60f5eb48635",
         seller_id: id,
-        foto_testimoni: data.foto_testimoni,
+        foto_testimoni: "init.png",
       },
     });
 
-    return newDocument;
+    const fileName = `docs_${Date.now()}.jpg`;
+    const filePath = dokumentasiPhoto(
+      sellerAvail.user_id,
+      id,
+      newDocument.id,
+      fileName
+    );
+
+    const uploadResult = uploadUserAsset(file, filePath);
+
+    const updateDocs = await prisma.Documentation.update({
+      where: { id: newDocument.id },
+      data: { foto_testimoni: (await uploadResult).url },
+    });
+
+    return updateDocs;
   } catch (err) {
     console.error(err);
     throw err;
