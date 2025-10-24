@@ -61,11 +61,19 @@ const addNewSeller = async (user_id, dataSeller, dataSkill, file) => {
       throw new BadRequestError("Account has already!", "AUTH_SELLER_TAKEN");
     }
 
+    const buyer = await prisma.BuyerProfile.findUnique({
+      where: { user_id },
+    });
+
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const namaToko = `${buyer.fullname}${randomSuffix}`;
+
     const newSeller = await prisma.$transaction(async (tx) => {
       const seller = await tx.SellerProfile.create({
         data: {
           user_id,
           status: "active",
+          nama_toko: namaToko,
           ...dataSeller,
         },
       });
@@ -77,20 +85,25 @@ const addNewSeller = async (user_id, dataSeller, dataSkill, file) => {
         },
       });
 
-      await tx.UserRoleMap.create({
-        data: {
-          user_id,
-          role: "SELLER",
-        },
+      // 🔍 Cek apakah user sudah punya role SELLER
+      const existingRole = await tx.UserRoleMap.findFirst({
+        where: { user_id, role: "SELLER" },
       });
+
+      if (!existingRole) {
+        await tx.UserRoleMap.create({
+          data: {
+            user_id,
+            role: "SELLER",
+          },
+        });
+      }
 
       return seller;
     });
 
     const fileName = `profile_${Date.now()}.jpg`;
-
     const filePath = profileSeller(user_id, newSeller.id, fileName);
-
     const uploadResult = await uploadUserAsset(file, filePath);
 
     const updateProfile = await prisma.SellerProfile.update({

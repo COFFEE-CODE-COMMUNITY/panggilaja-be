@@ -5,16 +5,8 @@ import uploadUserAsset from "./uploadFileService.js";
 
 const getUserById = async (id) => {
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.BuyerProfile.findUnique({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        login_provider: true,
-        created_at: true,
-        updated_at: true,
-      },
     });
 
     if (!user) throw new NotFoundError("User not found");
@@ -28,8 +20,8 @@ const getUserById = async (id) => {
 
 const getAddressById = async (id) => {
   try {
-    const address = await prisma.BuyerProfile.findUnique({
-      where: { user_id: id },
+    const address = await prisma.AlamatBuyer.findFirst({
+      where: { id_buyer: id },
     });
 
     if (!address) throw new NotFoundError("Address not found");
@@ -41,29 +33,71 @@ const getAddressById = async (id) => {
   }
 };
 
-const updateUserById = async (id, data, file) => {
+const addNewAddress = async (id, data) => {
   try {
     const buyerProfile = await prisma.BuyerProfile.findUnique({
-      where: { user_id: id },
+      where: { id },
     });
 
-    if (!buyerProfile) throw new NotFoundError("User not found");
+    if (!buyerProfile) throw new NotFoundError("Buyer not found");
+
+    const newAddress = await prisma.AlamatBuyer.create({
+      data: {
+        id_buyer: id,
+        alamat: data.alamat,
+        provinsi: data.provinsi,
+        kota: data.kota,
+        kecamatan: data.kecamatan,
+        kode_pos: data.kode_pos,
+      },
+    });
+
+    console.log(newAddress);
+    return newAddress;
+  } catch (err) {
+    console.error("Error update user:", err.message);
+    throw err;
+  }
+};
+
+const updateUserById = async (id, data, file) => {
+  try {
+    const addressId = await prisma.AlamatBuyer.findUnique({
+      where: { id },
+    });
+
+    if (!addressId) throw new NotFoundError("Address not found");
 
     const fileName = `profile_${Date.now()}.jpg`;
 
-    const filePath = profileBuyer(id, buyerProfile.id, fileName, fileName);
+    const filePath = profileBuyer(id, addressId.id_buyer, fileName, fileName);
 
     const uploadResult = await uploadUserAsset(file, filePath);
 
-    const updatedUserProfile = await prisma.BuyerProfile.update({
-      where: { user_id: id },
-      data: { ...data, foto_buyer: uploadResult.url },
-    });
+    const result = await prisma.$transaction([
+      prisma.BuyerProfile.update({
+        where: { id: addressId.id_buyer },
+        data: {
+          fullname: data.fullname,
+          foto_buyer: uploadResult.url,
+        },
+      }),
+      prisma.AlamatBuyer.update({
+        where: { id },
+        data: {
+          alamat: data.alamat,
+          provinsi: data.provinsi,
+          kota: data.kota,
+          kecamatan: data.kecamatan,
+          kode_pos: data.kode_pos,
+        },
+      }),
+    ]);
 
-    console.log(updatedUserProfile);
-    return updatedUserProfile;
+    console.log(result);
+    return result;
   } catch (err) {
-    console.error("Error update user:", err.message);
+    console.error("Error update address:", err.message);
     throw err;
   }
 };
@@ -89,6 +123,10 @@ const deleteUserById = async (id) => {
       if (buyer) {
         await tx.order.deleteMany({
           where: { buyer_id: buyer.id },
+        });
+
+        await tx.AlamatBuyer.deleteMany({
+          where: { id_buyer: buyer.id },
         });
 
         await tx.buyerProfile.delete({
@@ -147,14 +185,14 @@ const deleteUserById = async (id) => {
 const getOrdersByUserId = async (id) => {
   try {
     const buyerId = await prisma.BuyerProfile.findUnique({
-      where: { user_id: id },
+      where: { id },
       select: { id: true },
     });
 
     if (!buyerId) throw new NotFoundError("Buyer not found");
 
     const orders = await prisma.Order.findMany({
-      where: { buyer_id: buyerId.id },
+      where: { buyer_id: id },
     });
 
     // if (orders.length === 0) throw new NotFoundError("No orders found");
@@ -167,44 +205,41 @@ const getOrdersByUserId = async (id) => {
 };
 
 // Searching
-const getServicesByPlace = async (id, data) => {
+const getServicesByPlace = async (id, kecamatan) => {
   try {
-    // Validasi user yang melakukan request
-    const user = await prisma.User.findUnique({
-      where: { id },
-    });
+    // Validasi user
+    const buyer = await prisma.buyerProfile.findUnique({ where: { id } });
+    if (!buyer) throw new NotFoundError("buyer not found");
 
-    if (!user) throw new NotFoundError("User not found");
-
-    // Cari semua user yang berada di kecamatan yang sama
-    const buyers = await prisma.BuyerProfile.findMany({
-      where: { kecamatan: data.kecamatan },
+    // Cari buyer lain di kecamatan yang sama
+    const buyers = await prisma.buyerProfile.findMany({
+      where: {
+        alamat: {
+          some: { kecamatan: kecamatan },
+        },
+      },
       select: { user_id: true },
     });
 
-    if (buyers.length === 0) {
+    if (buyers.length === 0)
       throw new NotFoundError("No service found in this area");
-    }
 
-    // Ambil semua user_id dari buyer di lokasi itu
     const userIds = buyers.map((b) => b.user_id);
 
-    // Ambil semua seller yang user_id-nya ada di daftar tersebut
-    const sellers = await prisma.SellerProfile.findMany({
+    // Cari seller berdasarkan user_id
+    const sellers = await prisma.sellerProfile.findMany({
       where: { user_id: { in: userIds } },
       select: { id: true },
     });
 
-    if (sellers.length === 0) {
+    if (sellers.length === 0)
       throw new NotFoundError("No sellers found in this area");
-    }
 
-    // Ambil semua service milik seller tersebut
     const sellerIds = sellers.map((s) => s.id);
-    const services = await prisma.Service.findMany({
-      where: {
-        seller_id: { in: sellerIds },
-      },
+
+    // Ambil semua service dari seller tersebut
+    const services = await prisma.service.findMany({
+      where: { seller_id: { in: sellerIds } },
       select: {
         id: true,
         nama_jasa: true,
@@ -244,7 +279,7 @@ const getFavoriteServices = async (id) => {
 const addNewFavoriteService = async (id) => {
   try {
     // cara sementara
-    const serviceId = "cdd44653-e3d1-4a9c-bb6a-396468e28cef";
+    const serviceId = "bdc206df-0f97-4a60-8e40-a3a8fc98a94c";
 
     if (!serviceId) throw new NotFoundError("Service not found");
 
@@ -281,6 +316,7 @@ const getSellerById = async (id) => {
 export default {
   getUserById,
   getAddressById,
+  addNewAddress,
   updateUserById,
   deleteUserById,
   getOrdersByUserId,

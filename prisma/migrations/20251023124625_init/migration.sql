@@ -39,12 +39,6 @@ CREATE TABLE "BuyerProfile" (
     "user_id" TEXT NOT NULL,
     "fullname" TEXT,
     "total_order" INTEGER NOT NULL DEFAULT 0,
-    "foto_buyer" TEXT,
-    "alamat" TEXT,
-    "provinsi" TEXT,
-    "kota" TEXT,
-    "kecamatan" TEXT,
-    "kode_pos" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -52,10 +46,24 @@ CREATE TABLE "BuyerProfile" (
 );
 
 -- CreateTable
+CREATE TABLE "AlamatBuyer" (
+    "id" TEXT NOT NULL,
+    "id_buyer" TEXT NOT NULL,
+    "alamat" TEXT,
+    "provinsi" TEXT,
+    "kota" TEXT,
+    "kecamatan" TEXT,
+    "kode_pos" TEXT,
+
+    CONSTRAINT "AlamatBuyer_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "SellerProfile" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'active',
+    "nama_toko" TEXT NOT NULL,
     "deskripsi_toko" TEXT,
     "foto_toko" TEXT,
     "kategori_toko" TEXT,
@@ -65,6 +73,19 @@ CREATE TABLE "SellerProfile" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "SellerProfile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AlamatSeller" (
+    "id" TEXT NOT NULL,
+    "id_seller" TEXT NOT NULL,
+    "alamat" TEXT,
+    "provinsi" TEXT,
+    "kota" TEXT,
+    "kecamatan" TEXT,
+    "kode_pos" TEXT,
+
+    CONSTRAINT "AlamatSeller_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -83,9 +104,12 @@ CREATE TABLE "Service" (
     "deskripsi" TEXT NOT NULL,
     "base_price" DOUBLE PRECISION NOT NULL,
     "top_price" DOUBLE PRECISION NOT NULL,
-    "foto_product" TEXT NOT NULL,
+    "foto_product" TEXT,
     "status" "ServiceStatus" NOT NULL,
     "kategori_id" TEXT NOT NULL,
+    "rata_rata_rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "jumlah_rating" INTEGER NOT NULL DEFAULT 0,
+    "jumlah_pembeli" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -189,6 +213,9 @@ CREATE UNIQUE INDEX "BuyerProfile_user_id_key" ON "BuyerProfile"("user_id");
 CREATE UNIQUE INDEX "SellerProfile_user_id_key" ON "SellerProfile"("user_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "AlamatSeller_id_seller_key" ON "AlamatSeller"("id_seller");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Kategori_kategori_key" ON "Kategori"("kategori");
 
 -- CreateIndex
@@ -207,25 +234,31 @@ ALTER TABLE "UserRoleMap" ADD CONSTRAINT "UserRoleMap_user_id_fkey" FOREIGN KEY 
 ALTER TABLE "BuyerProfile" ADD CONSTRAINT "BuyerProfile_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "AlamatBuyer" ADD CONSTRAINT "AlamatBuyer_id_buyer_fkey" FOREIGN KEY ("id_buyer") REFERENCES "BuyerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "SellerProfile" ADD CONSTRAINT "SellerProfile_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AlamatSeller" ADD CONSTRAINT "AlamatSeller_id_seller_fkey" FOREIGN KEY ("id_seller") REFERENCES "SellerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_kategori_id_fkey" FOREIGN KEY ("kategori_id") REFERENCES "Kategori"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Service" ADD CONSTRAINT "Service_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Service" ADD CONSTRAINT "Service_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "SellerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Skill" ADD CONSTRAINT "Skill_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Skill" ADD CONSTRAINT "Skill_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "SellerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_buyer_id_fkey" FOREIGN KEY ("buyer_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Order" ADD CONSTRAINT "Order_buyer_id_fkey" FOREIGN KEY ("buyer_id") REFERENCES "BuyerProfile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Order" ADD CONSTRAINT "Order_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "SellerProfile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Review" ADD CONSTRAINT "Review_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -243,7 +276,7 @@ ALTER TABLE "FavoriteService" ADD CONSTRAINT "FavoriteService_service_id_fkey" F
 ALTER TABLE "Documentation" ADD CONSTRAINT "Documentation_service_id_fkey" FOREIGN KEY ("service_id") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Documentation" ADD CONSTRAINT "Documentation_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Documentation" ADD CONSTRAINT "Documentation_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "SellerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

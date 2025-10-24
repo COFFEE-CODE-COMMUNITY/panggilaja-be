@@ -5,7 +5,7 @@ import BadRequestError from "../exceptions/BadRequestError.js";
 const getUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const loggedInUserId = req.user.id;
+    const loggedInUserId = req.user.id_buyer;
 
     // validasi id pada token dan parameter
     if (id !== loggedInUserId) {
@@ -26,7 +26,7 @@ const getUserById = async (req, res, next) => {
 const getAddressById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const loggedInUserId = req.user.id;
+    const loggedInUserId = req.user.id_buyer;
 
     // validasi id pada token dan parameter
     if (id !== loggedInUserId) {
@@ -44,16 +44,33 @@ const getAddressById = async (req, res, next) => {
   }
 };
 
-const updateUserById = async (req, res, next) => {
+const addNewAddress = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const file = req.file;
-    const loggedInUserId = req.user.id;
+    const id = req.params.id;
+    const loggedInUserId = req.user.id_buyer;
 
     // validasi id pada token dan parameter
     if (id !== loggedInUserId) {
       throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
     }
+
+    const data = req.body;
+    const result = await userService.addNewAddress(id, data);
+
+    res.status(200).json({
+      status: "success",
+      message: `Success add new address User by id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateUserById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const file = req.file;
 
     if (!file) {
       throw new BadRequestError("File required!", "BAD_PAYLOAD");
@@ -98,7 +115,7 @@ const deleteUserById = async (req, res, next) => {
 const getOrdersByUserId = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const loggedInUserId = req.user.id;
+    const loggedInUserId = req.user.id_buyer;
 
     // validasi id pada token dan parameter
     if (id !== loggedInUserId) {
@@ -195,6 +212,7 @@ const getSellerById = async (req, res, next) => {
 export default {
   getUserById,
   getAddressById,
+  addNewAddress,
   updateUserById,
   deleteUserById,
   getOrdersByUserId,
