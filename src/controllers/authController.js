@@ -25,8 +25,10 @@ const registerUser = async (req, res, next) => {
 const loginUser = async (req, res, next) => {
   try {
     // ⚠️ PERBAIKAN: Destructure token dengan benar
-    const { accessToken, refreshToken, user } = await authService.loginUser(req.body);
-    
+    const { accessToken, refreshToken, user } = await authService.loginUser(
+      req.body
+    );
+
     // Set refresh token di cookie (HTTP-only untuk keamanan)
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true, // ✅ Ubah ke true untuk keamanan
@@ -40,11 +42,10 @@ const loginUser = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       message: "User login successfully",
-      data: { 
-        user: { 
+      data: {
+        user: {
           accessToken,
-          userInfo: user // info user untuk disimpan di redux
-        } 
+        },
       },
     });
   } catch (e) {
@@ -56,9 +57,9 @@ const refreshToken = async (req, res, next) => {
   try {
     console.log("🔄 Refresh token endpoint dipanggil");
     console.log("Cookies:", req.cookies);
-    
+
     const { refreshToken } = req.cookies;
-    
+
     if (!refreshToken) {
       console.error("❌ Refresh token tidak ditemukan di cookies");
       throw new BadRequestError("Refresh token missing", "TOKEN_MISSING");
