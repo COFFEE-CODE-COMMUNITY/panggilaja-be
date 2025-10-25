@@ -188,7 +188,8 @@ const getFavoriteServices = async (req, res, next) => {
 const addNewFavoriteService = async (req, res, next) => {
   try {
     const id = req.user.id;
-    const result = await userService.addNewFavoriteService(id);
+    const serviceId = req.params.id;
+    const result = await userService.addNewFavoriteService(id, serviceId);
 
     res.status(200).json({
       status: "success",

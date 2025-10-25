@@ -29,7 +29,7 @@ protectedUserRoute.delete("/:id", userController.deleteUserById);
 protectedUserRoute.get("/:id/orders", userController.getOrdersByUserId);
 
 // Favorite
-protectedUserRoute.post("/favorites", userController.addNewFavoriteService);
+protectedUserRoute.post("/favorites/:id", userController.addNewFavoriteService);
 protectedUserRoute.get("/:id/favorites", userController.getFavoriteServices);
 
 export default { publicUserRouter, protectedUserRoute };

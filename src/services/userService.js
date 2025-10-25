@@ -283,11 +283,8 @@ const getFavoriteServices = async (id) => {
   }
 };
 
-const addNewFavoriteService = async (id) => {
+const addNewFavoriteService = async (id, serviceId) => {
   try {
-    // cara sementara
-    const serviceId = "c69e74c2-448b-40ff-9787-b4a1adb18223";
-
     if (!serviceId) throw new NotFoundError("Service not found");
 
     const addFavorite = await prisma.FavoriteService.create({
