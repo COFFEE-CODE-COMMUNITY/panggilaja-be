@@ -25,7 +25,10 @@ const getSellerById = async (id) => {
 
     if (!seller) throw new NotFoundError("Seller not found");
 
-    return seller;
+    const addressSeller = await prisma.AlamatSeller.findUnique({
+      where: { id_seller: id },
+    });
+    return { ...seller, address: { ...addressSeller } };
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
     throw err;
