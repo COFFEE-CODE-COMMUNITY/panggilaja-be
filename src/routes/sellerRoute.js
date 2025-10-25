@@ -3,23 +3,30 @@ import sellerController from "../controllers/sellerController.js";
 import validateToken from "../middleware/validateToken.js";
 import upload from "../middleware/upload.js";
 
-const sellerRouter = Router();
+const publicSellerRoute = Router();
+publicSellerRoute.get("/", sellerController.getAllSeller);
 
+const protectedSellerRoute = Router();
 // Token Validation
-sellerRouter.use(validateToken);
-
+protectedSellerRoute.use(validateToken);
 // Seller Routes
-sellerRouter.get("/", sellerController.getAllSeller);
-sellerRouter.get("/:id", sellerController.getSellerById);
-sellerRouter.get("/:id/services", sellerController.getAllServiceByIdSeller);
-sellerRouter.post("/", upload.single("file"), sellerController.addNewSeller);
-sellerRouter.put("/:id", sellerController.updateSellerById);
-sellerRouter.delete("/:id", sellerController.deleteSellerById);
+protectedSellerRoute.get("/:id", sellerController.getSellerById);
+protectedSellerRoute.get(
+  "/:id/services",
+  sellerController.getAllServiceByIdSeller
+);
+protectedSellerRoute.post(
+  "/",
+  upload.single("file"),
+  sellerController.addNewSeller
+);
+protectedSellerRoute.put("/:id", sellerController.updateSellerById);
+protectedSellerRoute.delete("/:id", sellerController.deleteSellerById);
 
 // Additional
-sellerRouter.get("/:id/orders", sellerController.getOrdersBySellerId);
+protectedSellerRoute.get("/:id/orders", sellerController.getOrdersBySellerId);
 
 // Docs Routes
-sellerRouter.get("/:id/docs", sellerController.getDocsById);
+protectedSellerRoute.get("/:id/docs", sellerController.getDocsById);
 
-export default sellerRouter;
+export default { publicSellerRoute, protectedSellerRoute };

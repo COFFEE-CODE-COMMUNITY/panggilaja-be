@@ -51,7 +51,13 @@ const getAllServiceByIdSeller = async (sellerId) => {
   }
 };
 
-const addNewSeller = async (user_id, dataSeller, dataSkill, file) => {
+const addNewSeller = async (
+  user_id,
+  dataSeller,
+  dataSkill,
+  dataAddressSeller,
+  file
+) => {
   try {
     const sellerAvail = await prisma.SellerProfile.findUnique({
       where: { user_id },
@@ -85,7 +91,17 @@ const addNewSeller = async (user_id, dataSeller, dataSkill, file) => {
         },
       });
 
-      // 🔍 Cek apakah user sudah punya role SELLER
+      await tx.AlamatSeller.create({
+        data: {
+          id_seller: seller.id,
+          alamat: dataAddressSeller.alamat,
+          provinsi: dataAddressSeller.provinsi,
+          kota: dataAddressSeller.kota,
+          kecamatan: dataAddressSeller.kecamatan,
+          kode_pos: dataAddressSeller.kode_pos,
+        },
+      });
+
       const existingRole = await tx.UserRoleMap.findFirst({
         where: { user_id, role: "SELLER" },
       });
@@ -156,29 +172,40 @@ const updateSellerById = async (id, dataSeller, dataSkill) => {
 
 const deleteSellerById = async (id) => {
   try {
-    const sellerAvail = await prisma.SellerProfile.findUnique({
-      where: { id },
-    });
-
-    if (!sellerAvail) {
+    const seller = await prisma.SellerProfile.findUnique({ where: { id } });
+    if (!seller) {
       throw new NotFoundError("Seller not found!");
     }
 
-    await prisma.UserRoleMap.delete({
-      where: {
-        user_id_role: {
-          user_id: sellerAvail.user_id,
-          role: "SELLER",
+    const deletedSeller = await prisma.$transaction(async (tx) => {
+      await tx.UserRoleMap.delete({
+        where: {
+          user_id_role: {
+            user_id: seller.user_id,
+            role: "SELLER",
+          },
         },
-      },
+      });
+
+      await tx.AlamatSeller.delete({
+        where: { id_seller: id },
+      });
+
+      await prisma.Skill.delete({
+        where: {
+          seller_id: id,
+        },
+      });
+
+      return await tx.SellerProfile.delete({
+        where: { id },
+      });
     });
 
-    const deletedSeller = await prisma.SellerProfile.delete({ where: { id } });
-
     return deletedSeller;
-  } catch (err) {
-    console.error("Errorfetching seller:", err.message);
-    throw err;
+  } catch (error) {
+    console.error("❌ Error deleting seller:", error.message);
+    throw error;
   }
 };
 

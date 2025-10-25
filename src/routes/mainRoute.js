@@ -13,13 +13,22 @@ const router = Router();
 router.use("/auth", authRouter);
 
 // User Route
-router.use("/users", userRouter);
+// public
+router.use("/users", userRouter.publicUserRouter);
+// protected
+router.use("/users", userRouter.protectedUserRoute);
 
 // Service Route
-router.use("/services", serviceRouter);
+// public
+router.use("/services", serviceRouter.publicServiceRouter);
+// protected
+router.use("/services", serviceRouter.protectedServiceRouter);
 
-// Service Route
-router.use("/sellers", sellerRouter);
+// Seller Route
+// public
+router.use("/sellers", sellerRouter.publicSellerRoute);
+// protected
+router.use("/sellers", sellerRouter.protectedSellerRoute);
 
 // Order Route
 router.use("/orders", orderRouter);

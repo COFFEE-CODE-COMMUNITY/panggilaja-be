@@ -14,7 +14,7 @@ const addNewDocs = async (id, file) => {
     const newDocument = await prisma.Documentation.create({
       data: {
         // cara sementara
-        service_id: "bdc206df-0f97-4a60-8e40-a3a8fc98a94c",
+        service_id: "c69e74c2-448b-40ff-9787-b4a1adb18223",
         seller_id: id,
         foto_testimoni: "init.png",
       },

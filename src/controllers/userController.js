@@ -67,6 +67,21 @@ const addNewAddress = async (req, res, next) => {
   }
 };
 
+const deleteAddressById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+
+    const result = await userService.deleteAddressById(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Delete Current Address by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updateUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -136,16 +151,8 @@ const getOrdersByUserId = async (req, res, next) => {
 // Searching
 const getServicesByPlace = async (req, res, next) => {
   try {
-    const id = req.params.id;
-    const loggedInUserId = req.user.id;
-
-    // validasi id pada token dan parameter
-    if (id !== loggedInUserId) {
-      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
-    }
-
     const { kecamatan } = req.query;
-    const result = await userService.getServicesByPlace(id, { kecamatan });
+    const result = await userService.getServicesByPlace(kecamatan);
     res.status(200).json({
       status: "success",
       message: `This is Services in Your Location`,
@@ -214,6 +221,7 @@ export default {
   getAddressById,
   addNewAddress,
   updateUserById,
+  deleteAddressById,
   deleteUserById,
   getOrdersByUserId,
   getServicesByPlace,

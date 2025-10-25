@@ -60,6 +60,25 @@ const addNewAddress = async (id, data) => {
   }
 };
 
+const deleteAddressById = async (id) => {
+  try {
+    const addressId = await prisma.AlamatBuyer.findUnique({
+      where: { id },
+    });
+
+    if (!addressId) throw new NotFoundError("Address not found");
+
+    const deleteAddress = await prisma.AlamatBuyer.delete({
+      where: { id },
+    });
+
+    return deleteAddress;
+  } catch (err) {
+    console.error("❌ Error deleting address:", err.message);
+    throw err;
+  }
+};
+
 const updateUserById = async (id, data, file) => {
   try {
     const addressId = await prisma.AlamatBuyer.findUnique({
@@ -205,39 +224,26 @@ const getOrdersByUserId = async (id) => {
 };
 
 // Searching
-const getServicesByPlace = async (id, kecamatan) => {
+const getServicesByPlace = async (kecamatan) => {
   try {
-    // Validasi user
-    const buyer = await prisma.buyerProfile.findUnique({ where: { id } });
-    if (!buyer) throw new NotFoundError("buyer not found");
+    if (!kecamatan) {
+      throw new BadRequestError("Kecamatan parameter is required");
+    }
 
-    // Cari buyer lain di kecamatan yang sama
-    const buyers = await prisma.buyerProfile.findMany({
+    const sellers = await prisma.alamatSeller.findMany({
       where: {
-        alamat: {
-          some: { kecamatan: kecamatan },
+        kecamatan: {
+          equals: kecamatan,
+          mode: "insensitive",
         },
       },
-      select: { user_id: true },
+      select: { id_seller: true },
     });
 
-    if (buyers.length === 0)
-      throw new NotFoundError("No service found in this area");
+    const sellerIds = sellers.map((seller) => seller.id_seller);
 
-    const userIds = buyers.map((b) => b.user_id);
+    if (sellerIds.length === 0) return [];
 
-    // Cari seller berdasarkan user_id
-    const sellers = await prisma.sellerProfile.findMany({
-      where: { user_id: { in: userIds } },
-      select: { id: true },
-    });
-
-    if (sellers.length === 0)
-      throw new NotFoundError("No sellers found in this area");
-
-    const sellerIds = sellers.map((s) => s.id);
-
-    // Ambil semua service dari seller tersebut
     const services = await prisma.service.findMany({
       where: { seller_id: { in: sellerIds } },
       select: {
@@ -250,12 +256,13 @@ const getServicesByPlace = async (id, kecamatan) => {
         rata_rata_rating: true,
         jumlah_rating: true,
         jumlah_pembeli: true,
+        seller_id: true,
       },
     });
 
     return services;
   } catch (err) {
-    console.error("Error fetching services:", err.message);
+    console.error("Error fetching services by place:", err.message);
     throw err;
   }
 };
@@ -279,7 +286,7 @@ const getFavoriteServices = async (id) => {
 const addNewFavoriteService = async (id) => {
   try {
     // cara sementara
-    const serviceId = "bdc206df-0f97-4a60-8e40-a3a8fc98a94c";
+    const serviceId = "c69e74c2-448b-40ff-9787-b4a1adb18223";
 
     if (!serviceId) throw new NotFoundError("Service not found");
 
@@ -317,6 +324,7 @@ export default {
   getUserById,
   getAddressById,
   addNewAddress,
+  deleteAddressById,
   updateUserById,
   deleteUserById,
   getOrdersByUserId,

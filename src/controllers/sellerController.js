@@ -70,10 +70,18 @@ const addNewSeller = async (req, res, next) => {
     const dataSkill = {
       skill: jsonData.skill,
     };
+    const dataAddressSeller = {
+      alamat: jsonData.alamat,
+      provinsi: jsonData.provinsi,
+      kota: jsonData.kota,
+      kecamatan: jsonData.kecamatan,
+      kode_pos: jsonData.kode_pos,
+    };
     const addNewSeller = await sellerService.addNewSeller(
       user_id,
       dataSeller,
       dataSkill,
+      dataAddressSeller,
       file
     );
     res.status(200).json({

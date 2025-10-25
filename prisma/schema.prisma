@@ -163,7 +163,7 @@ model Service {
 
 model Skill {
   id        String @id @default(uuid())
-  seller_id String
+  seller_id String @unique
   skill     String
 
   sellerProfile SellerProfile @relation(fields: [seller_id], references: [id], onDelete: Cascade)
