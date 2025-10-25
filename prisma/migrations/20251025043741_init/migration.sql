@@ -38,6 +38,7 @@ CREATE TABLE "BuyerProfile" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "fullname" TEXT,
+    "foto_buyer" TEXT,
     "total_order" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -217,6 +218,9 @@ CREATE UNIQUE INDEX "AlamatSeller_id_seller_key" ON "AlamatSeller"("id_seller");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Kategori_kategori_key" ON "Kategori"("kategori");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Skill_seller_id_key" ON "Skill"("seller_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "FavoriteService_user_id_service_id_key" ON "FavoriteService"("user_id", "service_id");
