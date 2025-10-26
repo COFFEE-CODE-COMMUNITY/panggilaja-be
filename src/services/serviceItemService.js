@@ -109,10 +109,14 @@ const updateServiceById = async (id, data) => {
 
 const deleteServiceById = async (id) => {
   try {
-    const services = await prisma.service.delete({ where: { id } });
-    return services;
+    const deletedService = await prisma.$transaction(async (tx) => {
+      await tx.FavoriteService.deleteMany({ where: { service_id: id } });
+      return await tx.service.delete({ where: { id } });
+    });
+
+    return deletedService;
   } catch (err) {
-    console.error("Error delete service:", err.message);
+    console.error("Error deleting service:", err.message);
     throw err;
   }
 };
