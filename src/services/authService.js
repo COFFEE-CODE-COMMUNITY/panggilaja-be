@@ -114,7 +114,6 @@ const loginUser = async ({ email, password }) => {
   return {
     accessToken,
     refreshToken,
-    user: payload.user,
   };
 };
 
