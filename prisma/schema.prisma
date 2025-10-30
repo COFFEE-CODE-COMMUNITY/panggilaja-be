@@ -37,14 +37,14 @@ enum OrderStatus {
 // MAIN MODELS
 //
 model User {
-  id             String           @id @default(uuid())
-  email          String           @unique
-  password       String
+  id             String        @id @default(uuid())
+  email          String        @unique
+  password       String?
   username       String?
   login_provider LoginProvider
   oauth_id       String?
-  created_at     DateTime         @default(now())
-  updated_at     DateTime         @updatedAt
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
 
   // Relations
   roles          UserRoleMap[]
@@ -57,7 +57,7 @@ model User {
 }
 
 model UserRoleMap {
-  id      String    @id @default(uuid())
+  id      String   @id @default(uuid())
   user_id String
   role    RoleType
 
@@ -78,28 +78,28 @@ model BuyerProfile {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  ordersBuyer    Order[]
-  alamat          AlamatBuyer[]
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  ordersBuyer Order[]
+  alamat      AlamatBuyer[]
+  user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
-model AlamatBuyer{
-  id          String   @id @default(uuid())
-  id_buyer    String  
-  alamat      String?
-  provinsi    String?
-  kota        String?
-  kecamatan   String?
-  kode_pos    String?
+model AlamatBuyer {
+  id        String  @id @default(uuid())
+  id_buyer  String
+  alamat    String?
+  provinsi  String?
+  kota      String?
+  kecamatan String?
+  kode_pos  String?
 
-  buyer       BuyerProfile  @relation(fields: [id_buyer], references: [id], onDelete: Cascade)
+  buyer BuyerProfile @relation(fields: [id_buyer], references: [id], onDelete: Cascade)
 }
 
 model SellerProfile {
   id               String   @id @default(uuid())
   user_id          String   @unique
   status           String   @default("active")
-  nama_toko        String 
+  nama_toko        String
   deskripsi_toko   String?
   foto_toko        String?
   kategori_toko    String?
@@ -108,24 +108,24 @@ model SellerProfile {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  skill            Skill[]
-  services         Service[]
-  ordersSeller     Order[]
-  documentations   Documentation[]
-  alamat            AlamatSeller?
-  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  skill          Skill[]
+  services       Service[]
+  ordersSeller   Order[]
+  documentations Documentation[]
+  alamat         AlamatSeller?
+  user           User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
-model AlamatSeller{
-  id          String   @id @default(uuid())
-  id_seller   String   @unique
-  alamat      String?
-  provinsi    String?
-  kota        String?
-  kecamatan   String?
-  kode_pos    String?
+model AlamatSeller {
+  id        String  @id @default(uuid())
+  id_seller String  @unique
+  alamat    String?
+  provinsi  String?
+  kota      String?
+  kecamatan String?
+  kode_pos  String?
 
-  seller       SellerProfile  @relation(fields: [id_seller], references: [id], onDelete: Cascade)
+  seller SellerProfile @relation(fields: [id_seller], references: [id], onDelete: Cascade)
 }
 
 //
@@ -138,27 +138,27 @@ model Kategori {
 }
 
 model Service {
-  id                String           @id @default(uuid())
-  seller_id         String
-  nama_jasa         String
-  deskripsi         String
-  base_price        Float
-  top_price         Float
-  foto_product      String?
-  status            ServiceStatus
-  kategori_id       String
-  rata_rata_rating  Float            @default(0)
-  jumlah_rating     Int              @default(0)
-  jumlah_pembeli    Int              @default(0)
-  created_at        DateTime         @default(now())
-  updated_at        DateTime         @updatedAt
+  id               String        @id @default(uuid())
+  seller_id        String
+  nama_jasa        String
+  deskripsi        String
+  base_price       Float
+  top_price        Float
+  foto_product     String?
+  status           ServiceStatus
+  kategori_id      String
+  rata_rata_rating Float         @default(0)
+  jumlah_rating    Int           @default(0)
+  jumlah_pembeli   Int           @default(0)
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
 
-  kategori          Kategori         @relation(fields: [kategori_id], references: [id])
-  seller            SellerProfile    @relation(fields: [seller_id], references: [id], onDelete: Cascade)
-  orders            Order[]
-  reviews           Review[]
-  favorites         FavoriteService[]
-  documentations    Documentation[]
+  kategori       Kategori          @relation(fields: [kategori_id], references: [id])
+  seller         SellerProfile     @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  orders         Order[]
+  reviews        Review[]
+  favorites      FavoriteService[]
+  documentations Documentation[]
 }
 
 model Skill {
@@ -173,20 +173,20 @@ model Skill {
 // ORDER & REVIEW
 //
 model Order {
-  id             String       @id @default(uuid())
+  id             String      @id @default(uuid())
   service_id     String
   buyer_id       String
   seller_id      String
   pesan_tambahan String?
-  status         OrderStatus  @default(pending)
-  tanggal        DateTime     @default(now())
+  status         OrderStatus @default(pending)
+  tanggal        DateTime    @default(now())
   total_harga    Float
-  created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
 
-  service        Service       @relation(fields: [service_id], references: [id])
-  buyer          BuyerProfile  @relation(fields: [buyer_id], references: [id])
-  seller         SellerProfile @relation(fields: [seller_id], references: [id])
+  service Service       @relation(fields: [service_id], references: [id])
+  buyer   BuyerProfile  @relation(fields: [buyer_id], references: [id])
+  seller  SellerProfile @relation(fields: [seller_id], references: [id])
 }
 
 model Review {
@@ -225,7 +225,7 @@ model Documentation {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  service Service? @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  service Service?       @relation(fields: [service_id], references: [id], onDelete: Cascade)
   seller  SellerProfile? @relation(fields: [seller_id], references: [id], onDelete: Cascade)
 }
 
@@ -233,23 +233,23 @@ model Documentation {
 // AUTH MODELS
 //
 model RefreshToken {
-  id          String   @id @default(uuid())
-  user_id     String
-  token       String   @unique
-  revoked     Boolean  @default(false)
-  expired_at  DateTime
-  created_at  DateTime @default(now())
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String   @unique
+  revoked    Boolean  @default(false)
+  expired_at DateTime
+  created_at DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model PasswordReset {
-  id          String   @id @default(uuid())
-  user_id     String
-  code        String   @unique
-  used        Boolean  @default(false)
-  expired_at  DateTime
-  created_at  DateTime @default(now())
+  id         String   @id @default(uuid())
+  user_id    String
+  code       String   @unique
+  used       Boolean  @default(false)
+  expired_at DateTime
+  created_at DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }

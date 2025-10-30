@@ -6,8 +6,13 @@ import sellerRouter from "./sellerRoute.js";
 import orderRouter from "./orderRoute.js";
 import favoriteRouter from "./favoriteRoute.js";
 import docsRouter from "./docsRoute.js";
+import oauthRouter from "./oauthRoute.js";
+import reviewRouter from "./reviewRoute.js";
 
 const router = Router();
+
+// OAuth Route (untuk Google OAuth)
+router.use("/", oauthRouter);
 
 // Auth Route
 router.use("/auth", authRouter);
@@ -40,6 +45,7 @@ router.use("/docs", docsRouter);
 router.use("/favorites", favoriteRouter);
 
 // Review Route
-// router.use("/reviews");
+router.use("/reviews", reviewRouter);
+
 
 export default router;

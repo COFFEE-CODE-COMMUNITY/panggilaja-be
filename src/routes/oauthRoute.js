@@ -1,6 +1,12 @@
 import { Router } from "express";
+import {
+  authCallbackController,
+  authLoginController,
+} from "../controllers/oauthController.js";
 
-oauthRouter = Router();
+const oauthRouter = Router();
 
-oauthRouter.get("/auth/google", )
-oauthRouter.get("/auth/google/callback", )
+oauthRouter.get("/auth/google", authLoginController);
+oauthRouter.get("/auth/google/callback", authCallbackController);
+
+export default oauthRouter;

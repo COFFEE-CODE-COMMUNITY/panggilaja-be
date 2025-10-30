@@ -3,7 +3,6 @@ import authController from "../controllers/authController.js";
 import validate from "../middleware/validate.js";
 import authValidation from "../validator/authValidation.js";
 import validateToken from "../middleware/validateToken.js";
-import passport from "../utils/oauth/passport.js";
 
 const authRouter = Router();
 
@@ -45,16 +44,5 @@ authRouter.post(
 );
 
 authRouter.post("/change-user", validateToken, authController.switchUser);
-
-authRouter.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-authRouter.get(
-  "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
-  authController.googleCallback
-);
 
 export default authRouter;
