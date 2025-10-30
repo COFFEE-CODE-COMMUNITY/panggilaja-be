@@ -1,8 +1,17 @@
 import userService from "../services/userService.js";
+import UnauthorizedError from "../exceptions/UnauthorizedError.js";
+import BadRequestError from "../exceptions/BadRequestError.js";
 
 const getUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id_buyer;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await userService.getUserById(id);
     res.status(200).json({
       status: "success",
@@ -17,6 +26,13 @@ const getUserById = async (req, res, next) => {
 const getAddressById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id_buyer;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await userService.getAddressById(id);
     res.status(200).json({
       status: "success",
@@ -28,23 +44,56 @@ const getAddressById = async (req, res, next) => {
   }
 };
 
+const addNewAddress = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const loggedInUserId = req.user.id_buyer;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    const data = req.body;
+    const result = await userService.addNewAddress(id, data);
+
+    res.status(200).json({
+      status: "success",
+      message: `Success add new address User by id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteAddressById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+
+    const result = await userService.deleteAddressById(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Delete Current Address by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updateUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const userData = {
-      fullname: req.body.fullname,
-      foto_user: req.body.foto_user,
-    };
-    const addressData = {
-      user_id: id,
-      alamat: req.body.alamat,
-      provinsi: req.body.provinsi,
-      kota: req.body.kota,
-      kecamatan: req.body.kecamatan,
-      kode_pos: req.body.kode_pos,
-    };
+    const file = req.file;
 
-    const result = await userService.updateUserById(id, userData, addressData);
+    if (!file) {
+      throw new BadRequestError("File required!", "BAD_PAYLOAD");
+    }
+
+    const jsonData = JSON.parse(req.body.data);
+
+    const result = await userService.updateUserById(id, jsonData, file);
 
     res.status(200).json({
       status: "success",
@@ -59,6 +108,13 @@ const updateUserById = async (req, res, next) => {
 const deleteUserById = async (req, res, next) => {
   try {
     const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
     const result = await userService.deleteUserById(id);
     res.status(200).json({
       status: "success",
@@ -70,9 +126,107 @@ const deleteUserById = async (req, res, next) => {
   }
 };
 
+// Additional
+const getOrdersByUserId = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const loggedInUserId = req.user.id_buyer;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    const result = await userService.getOrdersByUserId(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Orders by User Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Searching
+const getServicesByPlace = async (req, res, next) => {
+  try {
+    const { kecamatan } = req.query;
+    const result = await userService.getServicesByPlace(kecamatan);
+    res.status(200).json({
+      status: "success",
+      message: `This is Services in Your Location`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Favorite
+const getFavoriteServices = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const loggedInUserId = req.user.id;
+
+    // validasi id pada token dan parameter
+    if (id !== loggedInUserId) {
+      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
+    }
+
+    const result = await userService.getFavoriteServices(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Current Address User by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const addNewFavoriteService = async (req, res, next) => {
+  try {
+    const id = req.user.id;
+    const serviceId = req.params.id;
+    const result = await userService.addNewFavoriteService(id, serviceId);
+
+    res.status(200).json({
+      status: "success",
+      message: `Success Add Favorite Service`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Seller
+const getSellerById = async (req, res, next) => {
+  try {
+    const id = req.params.sellerId;
+
+    const result = await userService.getSellerById(id);
+    res.status(200).json({
+      status: "success",
+      message: `Success Get Seller by Id: ${id}`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getUserById,
   getAddressById,
+  addNewAddress,
   updateUserById,
+  deleteAddressById,
   deleteUserById,
+  getOrdersByUserId,
+  getServicesByPlace,
+  getFavoriteServices,
+  addNewFavoriteService,
+  getSellerById,
 };

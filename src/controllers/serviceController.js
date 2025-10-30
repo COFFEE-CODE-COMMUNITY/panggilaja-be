@@ -2,6 +2,7 @@ import serviceItemService from "../services/serviceItemService.js";
 
 const getAllServices = async (req, res, next) => {
   try {
+    console.log("Masuk sini");
     const result = await serviceItemService.getAllServices();
     res.status(200).json({
       status: "success",
@@ -29,10 +30,15 @@ const getServiceById = async (req, res, next) => {
 
 const addItemService = async (req, res, next) => {
   try {
-    // const seller_id = req.user.id;
-    const seller_id = "6cfdaf48-23a3-4c7c-9837-50ytrf654rt6";
-    const request = req.body;
-    const result = await serviceItemService.addItemService(seller_id, request);
+    console.log(req.user);
+    const seller_id = req.user.id_seller;
+    const file = req.file;
+    const jsonData = JSON.parse(req.body.data);
+    const result = await serviceItemService.addItemService(
+      seller_id,
+      jsonData,
+      file
+    );
     res.status(201).json({
       status: "success",
       message: "Service added successfully!",
@@ -72,10 +78,26 @@ const deleteServiceById = async (req, res, next) => {
   }
 };
 
+const getAllKategori = async (req, res, next) => {
+  try {
+    console.log("Masuk controller kategori");
+    const data = await serviceItemService.getAllKategori();
+    res.status(200).json({
+      status: "success",
+      message: "Berhasil mengambil semua kategori",
+      data,
+    });
+  } catch (error) {
+    console.log("Error bang");
+    next(error);
+  }
+};
+
 export default {
   getAllServices,
   getServiceById,
   addItemService,
   updateServiceById,
   deleteServiceById,
+  getAllKategori,
 };

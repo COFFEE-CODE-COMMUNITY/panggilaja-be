@@ -16,7 +16,7 @@ async function main() {
   console.log("✅ Kategori created.");
 
   //
-  // STEP 2: Buat user buyer
+  // STEP 2: Buat user buyer + buyerProfile
   //
   const buyer1 = await prisma.user.create({
     data: {
@@ -24,9 +24,7 @@ async function main() {
       email: "buyer1@example.com",
       password: "password123",
       login_provider: "manual",
-      roles: {
-        create: { role: "USER" },
-      },
+      roles: { create: { role: "USER" } },
       buyerProfile: {
         create: {
           fullname: "John Doe",
@@ -39,6 +37,7 @@ async function main() {
         },
       },
     },
+    include: { buyerProfile: true },
   });
 
   const buyer2 = await prisma.user.create({
@@ -47,9 +46,7 @@ async function main() {
       email: "buyer2@example.com",
       password: "password456",
       login_provider: "manual",
-      roles: {
-        create: { role: "USER" },
-      },
+      roles: { create: { role: "USER" } },
       buyerProfile: {
         create: {
           fullname: "Jane Smith",
@@ -62,7 +59,9 @@ async function main() {
         },
       },
     },
+    include: { buyerProfile: true },
   });
+
   console.log("✅ Buyers created.");
 
   //
@@ -74,9 +73,7 @@ async function main() {
       email: "seller1@example.com",
       password: "sellerpass1",
       login_provider: "manual",
-      roles: {
-        create: { role: "SELLER" },
-      },
+      roles: { create: { role: "SELLER" } },
       sellerProfile: {
         create: {
           deskripsi_toko: "Spesialis servis elektronik dan alat rumah tangga",
@@ -93,6 +90,7 @@ async function main() {
         },
       },
     },
+    include: { sellerProfile: { include: { skill: true } } },
   });
 
   const seller2 = await prisma.user.create({
@@ -101,9 +99,7 @@ async function main() {
       email: "seller2@example.com",
       password: "sellerpass2",
       login_provider: "manual",
-      roles: {
-        create: { role: "SELLER" },
-      },
+      roles: { create: { role: "SELLER" } },
       sellerProfile: {
         create: {
           deskripsi_toko: "Kursus dan pelatihan profesional",
@@ -117,16 +113,21 @@ async function main() {
         },
       },
     },
+    include: { sellerProfile: { include: { skill: true } } },
   });
+
   console.log("✅ Sellers created with profiles and skills.");
 
   //
   // STEP 4: Buat services untuk masing-masing seller
   //
+  const sellerProfile1 = seller1.sellerProfile;
+  const sellerProfile2 = seller2.sellerProfile;
+
   for (let i = 1; i <= 5; i++) {
     await prisma.service.create({
       data: {
-        seller_id: seller1.id,
+        seller_id: sellerProfile1.id, // ✅ pakai ID dari SellerProfile, bukan User
         nama_jasa: `Servis Elektronik ${i}`,
         deskripsi: `Perbaikan perangkat elektronik ${i} seperti AC, kulkas, dan mesin cuci.`,
         base_price: 100 * i,
@@ -141,7 +142,7 @@ async function main() {
   for (let i = 1; i <= 5; i++) {
     await prisma.service.create({
       data: {
-        seller_id: seller2.id,
+        seller_id: sellerProfile2.id, // ✅ pakai ID dari SellerProfile
         nama_jasa: `Kelas Edukasi ${i}`,
         deskripsi: `Pelatihan atau kursus edukasi ${i}, dengan mentor berpengalaman.`,
         base_price: 150 * i,
@@ -152,41 +153,42 @@ async function main() {
       },
     });
   }
+
   console.log("✅ Services created for both sellers.");
 
   //
   // STEP 5: Buat orders (Buyer membeli dari Seller)
   //
   const allServicesSeller1 = await prisma.service.findMany({
-    where: { seller_id: seller1.id },
+    where: { seller_id: sellerProfile1.id },
   });
 
   const allServicesSeller2 = await prisma.service.findMany({
-    where: { seller_id: seller2.id },
+    where: { seller_id: sellerProfile2.id },
   });
 
   await prisma.order.createMany({
     data: [
       {
         service_id: allServicesSeller1[0].id,
-        buyer_id: buyer1.id,
-        seller_id: seller1.id,
+        buyer_id: buyer1.buyerProfile.id, // ✅ pakai ID BuyerProfile
+        seller_id: sellerProfile1.id, // ✅ pakai ID SellerProfile
         pesan_tambahan: "Tolong cepat ya, kulkas saya rusak parah.",
         status: "completed",
         total_harga: 300,
       },
       {
         service_id: allServicesSeller2[0].id,
-        buyer_id: buyer2.id,
-        seller_id: seller2.id,
+        buyer_id: buyer2.buyerProfile.id, // ✅ pakai ID BuyerProfile
+        seller_id: sellerProfile2.id, // ✅ pakai ID SellerProfile
         pesan_tambahan: "Butuh sesi tambahan untuk latihan public speaking.",
         status: "completed",
         total_harga: 450,
       },
     ],
   });
-  console.log("✅ Orders created successfully.");
 
+  console.log("✅ Orders created successfully.");
   console.log("🎉 Seeding completed successfully!");
 }
 

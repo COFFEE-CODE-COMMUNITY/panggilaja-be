@@ -5,6 +5,7 @@ const app = createApp();
 
 const server = app.listen(config.port, () => {
   console.info(`Server running on port : ${config.port}`);
+  console.log("Swagger docs available at http://localhost:5000/docs");
 });
 
 server.on("error", (err) => {

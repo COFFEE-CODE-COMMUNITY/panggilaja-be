@@ -1,17 +1,23 @@
 import { Router } from "express";
 import serviceController from "../controllers/serviceController.js";
 import validateToken from "../middleware/validateToken.js";
+import upload from "../middleware/upload.js";
 
-const serviceRouter = Router();
+const publicServiceRouter = Router();
+publicServiceRouter.get("/category", serviceController.getAllKategori);
+publicServiceRouter.get("/", serviceController.getAllServices);
+publicServiceRouter.get("/:id", serviceController.getServiceById);
 
+const protectedServiceRouter = Router();
 // Token Validation
-// serviceRouter.use(validateToken);
-
+protectedServiceRouter.use(validateToken);
 // Service Routes
-serviceRouter.get("/", serviceController.getAllServices);
-serviceRouter.get("/:id", serviceController.getServiceById);
-serviceRouter.post("/", serviceController.addItemService);
-serviceRouter.put("/:id", serviceController.updateServiceById);
-serviceRouter.delete("/:id", serviceController.deleteServiceById);
+protectedServiceRouter.post(
+  "/",
+  upload.single("file"),
+  serviceController.addItemService
+);
+protectedServiceRouter.put("/:id", serviceController.updateServiceById);
+protectedServiceRouter.delete("/:id", serviceController.deleteServiceById);
 
-export default serviceRouter;
+export default { publicServiceRouter, protectedServiceRouter };

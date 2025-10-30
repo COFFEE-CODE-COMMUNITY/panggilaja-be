@@ -2,6 +2,10 @@ import { Router } from "express";
 import authRouter from "./authRoute.js";
 import userRouter from "./userRoute.js";
 import serviceRouter from "./serviceRoute.js";
+import sellerRouter from "./sellerRoute.js";
+import orderRouter from "./orderRoute.js";
+import favoriteRouter from "./favoriteRoute.js";
+import docsRouter from "./docsRoute.js";
 
 const router = Router();
 
@@ -9,9 +13,33 @@ const router = Router();
 router.use("/auth", authRouter);
 
 // User Route
-router.use("/users", userRouter);
+// public
+router.use("/users", userRouter.publicUserRouter);
+// protected
+router.use("/users", userRouter.protectedUserRoute);
 
 // Service Route
-router.use("/services", serviceRouter);
+// public
+router.use("/services", serviceRouter.publicServiceRouter);
+// protected
+router.use("/services", serviceRouter.protectedServiceRouter);
+
+// Seller Route
+// public
+router.use("/sellers", sellerRouter.publicSellerRoute);
+// protected
+router.use("/sellers", sellerRouter.protectedSellerRoute);
+
+// Order Route
+router.use("/orders", orderRouter);
+
+// Documentation Route
+router.use("/docs", docsRouter);
+
+// Favorite Route
+router.use("/favorites", favoriteRouter);
+
+// Review Route
+// router.use("/reviews");
 
 export default router;

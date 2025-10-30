@@ -9,43 +9,56 @@ import ForbiddenError from "../exceptions/ForbiddenError.js";
 import UnauthorizedError from "../exceptions/UnauthorizedError.js";
 
 const registerUser = async ({ username, email, password }) => {
-  const existingUser = await prisma.user.findUnique({ where: { email } });
-  if (existingUser) {
-    throw new BadRequestError("Email already registered", "AUTH_EMAIL_TAKEN");
-  }
+  return await prisma.$transaction(async (tx) => {
+    const existingUser = await tx.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw new BadRequestError("Email already registered", "AUTH_EMAIL_TAKEN");
+    }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const newUser = await prisma.user.create({
-    data: {
-      username,
-      email,
-      password: hashedPassword,
-      login_provider: "manual",
-    },
+    const newUser = await tx.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+        login_provider: "manual",
+      },
+    });
+
+    await tx.userRoleMap.create({
+      data: {
+        user_id: newUser.id,
+        role: "USER",
+      },
+    });
+
+    const buyerProfile = await tx.buyerProfile.create({
+      data: {
+        user_id: newUser.id,
+        fullname: username || null,
+        total_order: 0,
+      },
+    });
+
+    await tx.alamatBuyer.create({
+      data: {
+        id_buyer: buyerProfile.id,
+        alamat: null,
+        provinsi: null,
+        kota: null,
+        kecamatan: null,
+        kode_pos: null,
+      },
+    });
+
+    return {
+      id: newUser.id,
+      email: newUser.email,
+      username: newUser.username,
+      role: "BUYER",
+    };
   });
-
-  await prisma.userRoleMap.create({
-    data: {
-      user_id: newUser.id,
-      role: "USER",
-    },
-  });
-
-  await prisma.buyerProfile.create({
-    data: {
-      user_id: newUser.id,
-      fullname: username || null,
-      total_order: 0,
-    },
-  });
-
-  return {
-    id: newUser.id,
-    email: newUser.email,
-    username: newUser.username,
-    role: "BUYER",
-  };
 };
 
 const loginUser = async ({ email, password }) => {
@@ -58,8 +71,10 @@ const loginUser = async ({ email, password }) => {
 
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { roles: true, buyerProfile: true },
+    include: { roles: true, buyerProfile: true, sellerProfile: true },
   });
+
+  console.log(user);
   if (!user) throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
 
   const isValid = await bcrypt.compare(password, user.password || "");
@@ -99,7 +114,6 @@ const loginUser = async ({ email, password }) => {
   return {
     accessToken,
     refreshToken,
-    user: payload.user,
   };
 };
 
@@ -185,6 +199,7 @@ async function switchUser(token) {
     }
 
     if (token.roles === "SELLER") {
+      console.log("Masuk sini");
       const payload = {
         user: {
           id: user.id,
