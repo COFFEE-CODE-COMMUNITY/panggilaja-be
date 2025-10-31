@@ -24,8 +24,6 @@ const getAddressById = async (id) => {
       where: { id_buyer: id },
     });
 
-    if (!address) throw new NotFoundError("Address not found");
-
     return address;
   } catch (err) {
     console.error("Error fetching address user:", err.message);
@@ -41,21 +39,37 @@ const addNewAddress = async (id, data) => {
 
     if (!buyerProfile) throw new NotFoundError("Buyer not found");
 
-    const newAddress = await prisma.AlamatBuyer.create({
-      data: {
-        id_buyer: id,
-        alamat: data.alamat,
-        provinsi: data.provinsi,
-        kota: data.kota,
-        kecamatan: data.kecamatan,
-        kode_pos: data.kode_pos,
-      },
+    const existingAddress = await prisma.AlamatBuyer.findFirst({
+      where: { id_buyer: id },
     });
 
-    console.log(newAddress);
-    return newAddress;
+    let address;
+    if (existingAddress) {
+      address = await prisma.AlamatBuyer.update({
+        where: { id: existingAddress.id },
+        data: {
+          alamat: data.alamat,
+          provinsi: data.provinsi,
+          kota: data.kota,
+          kecamatan: data.kecamatan,
+          kode_pos: data.kode_pos,
+        },
+      });
+    } else {
+      address = await prisma.AlamatBuyer.create({
+        data: {
+          id_buyer: id,
+          alamat: data.alamat,
+          provinsi: data.provinsi,
+          kota: data.kota,
+          kecamatan: data.kecamatan,
+          kode_pos: data.kode_pos,
+        },
+      });
+    }
+
+    return address;
   } catch (err) {
-    console.error("Error update user:", err.message);
     throw err;
   }
 };
