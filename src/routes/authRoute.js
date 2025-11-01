@@ -32,6 +32,7 @@ authRouter.post(
   validate(authValidation.requestResetSchema),
   authController.requestReset
 );
+
 authRouter.post(
   "/verify-reset-code",
   validate(authValidation.verifyResetSchema),
@@ -46,7 +47,6 @@ authRouter.post(
 authRouter.post(
   "/change-user",
   validateToken,
-  validate(authValidation.switchUserSchema),
   authController.switchUser
 );
 

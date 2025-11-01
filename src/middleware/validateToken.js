@@ -16,6 +16,7 @@ const validateToken = async (req, res, next) => {
         return next(error);
       }
 
+      console.log("Masuk sini")
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
           if (err.message === "jwt expired") {
@@ -29,6 +30,7 @@ const validateToken = async (req, res, next) => {
         return next();
       });
 
+      console.log("Apakah masuk sini")
       return;
     }
 

@@ -205,22 +205,15 @@ const logoutUser = async ({ refreshToken }) => {
   return { message: "Logout successful" };
 };
 
-const switchUser = async ({ currentToken, targetRole }) => {
+const switchUser = async (currentToken) => {
+
+  let targetRole;
   if (!currentToken) {
     throw new BadRequestError("Current token is required", "TOKEN_MISSING");
   }
-
-  if (!targetRole || (targetRole !== "buyer" && targetRole !== "seller")) {
-    throw new BadRequestError(
-      "Target role must be 'buyer' or 'seller'",
-      "INVALID_ROLE"
-    );
-  }
-
-  const decoded = jwt.verify(currentToken, config.jwt_key.access_key);
-
+  console.log(currentToken)
   const user = await prisma.user.findUnique({
-    where: { id: decoded.user.id },
+    where: { id: currentToken.id },
     include: { roles: true, buyerProfile: true, sellerProfile: true },
   });
 
@@ -228,17 +221,17 @@ const switchUser = async ({ currentToken, targetRole }) => {
     throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
   }
 
-  if (decoded.user.active_role === targetRole) {
-    throw new BadRequestError(
-      "User is already in the target role",
-      "ROLE_ALREADY_ACTIVE"
-    );
+  if (currentToken.active_role === 'seller'){
+    targetRole = 'buyer'
+  }
+
+  if (currentToken.active_role === 'buyer'){
+    targetRole = 'seller'
   }
 
   try {
     const payload = buildUserPayload(user, targetRole);
 
-    console.log(payload);
     const newAccessToken = jwt.sign(payload, config.jwt_key.access_key, {
       expiresIn: "10m",
     });
