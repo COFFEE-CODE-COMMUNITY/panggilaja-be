@@ -145,11 +145,19 @@ const resetPassword = async (req, res, next) => {
 
 const switchUser = async (req, res, next) => {
   try {
-    const newToken = await authService.switchUser(req.user);
+    const { targetRole } = req.body;
+    if (!targetRole) {
+      throw new BadRequestError("Target role is required", "MISSING_TARGET_ROLE");
+    }
+
+    const result = await authService.switchUser({
+      currentToken: req.headers.authorization?.replace('Bearer ', ''),
+      targetRole
+    });
     res.json({
       status: "success",
-      message: "New access token created",
-      data: { user: { accessToken: newToken } },
+      message: "User role switched successfully",
+      data: { user: result },
     });
   } catch (e) {
     next(e);

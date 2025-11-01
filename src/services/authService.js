@@ -8,6 +8,46 @@ import NotFoundError from "../exceptions/NotFoundError.js";
 import ForbiddenError from "../exceptions/ForbiddenError.js";
 import UnauthorizedError from "../exceptions/UnauthorizedError.js";
 
+const buildUserPayload = (user, activeRole) => {
+  if (!user) {
+    throw new Error("User object is required");
+  }
+
+  if (!activeRole || (activeRole !== "buyer" && activeRole !== "seller")) {
+    throw new Error("Active role must be either 'buyer' or 'seller'");
+  }
+
+  const availableRoles = ["buyer"];
+
+  if (user.sellerProfile && user.roles.some((role) => role.role === "SELLER")) {
+    availableRoles.push("seller");
+  }
+
+  if (!availableRoles.includes(activeRole)) {
+    throw new Error(`User does not have access to ${activeRole} role`);
+  }
+
+  const payload = {
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      active_role: activeRole,
+      available_roles: availableRoles,
+    },
+  };
+
+  if (activeRole === "buyer" && user.buyerProfile) {
+    payload.user.id_buyer = user.buyerProfile.id;
+  } else if (activeRole === "seller" && user.sellerProfile) {
+    payload.user.id_seller = user.sellerProfile.id;
+  } else {
+    throw new Error(`Required profile for ${activeRole} role not found`);
+  }
+
+  return payload;
+};
+
 const registerUser = async ({ username, email, password }) => {
   return await prisma.$transaction(async (tx) => {
     const existingUser = await tx.user.findUnique({ where: { email } });
@@ -82,17 +122,7 @@ const loginUser = async ({ email, password }) => {
     throw new BadRequestError("Invalid credentials", "AUTH_BAD_CREDENTIAL");
   }
 
-  const payload = {
-    user: {
-      id: user.id,
-      id_buyer: user.buyerProfile.id,
-      email: user.email,
-      username: user.username,
-      roles: "BUYER",
-    },
-  };
-
-  console.log(payload);
+  const payload = buildUserPayload(user, "buyer");
 
   const accessToken = jwt.sign(payload, config.jwt_key.access_key, {
     expiresIn: "10m",
@@ -124,7 +154,11 @@ const refreshAccessToken = async ({ refreshToken }) => {
 
   const tokenData = await prisma.refreshToken.findUnique({
     where: { token: refreshToken },
-    include: { user: { include: { roles: true } } },
+    include: {
+      user: {
+        include: { roles: true, buyerProfile: true, sellerProfile: true },
+      },
+    },
   });
 
   if (!tokenData || tokenData.revoked) {
@@ -146,7 +180,7 @@ const refreshAccessToken = async ({ refreshToken }) => {
   }
 
   const accessToken = jwt.sign(
-    { user: decoded.user },
+    buildUserPayload(tokenData.user, decoded.user.active_role),
     config.jwt_key.access_key,
     { expiresIn: "10m" }
   );
@@ -171,57 +205,64 @@ const logoutUser = async ({ refreshToken }) => {
   return { message: "Logout successful" };
 };
 
-async function switchUser(token) {
-  console.log(token);
+const switchUser = async ({ currentToken, targetRole }) => {
+  if (!currentToken) {
+    throw new BadRequestError("Current token is required", "TOKEN_MISSING");
+  }
+
+  if (!targetRole || (targetRole !== "buyer" && targetRole !== "seller")) {
+    throw new BadRequestError(
+      "Target role must be 'buyer' or 'seller'",
+      "INVALID_ROLE"
+    );
+  }
+
+  const decoded = jwt.verify(currentToken, config.jwt_key.access_key);
+
   const user = await prisma.user.findUnique({
-    where: { id: token.id },
+    where: { id: decoded.user.id },
     include: { roles: true, buyerProfile: true, sellerProfile: true },
   });
 
-  if (user.roles.length > 1) {
-    console.log(token);
-    if (token.roles === "BUYER") {
-      console.log("Masuk sini");
-      const payload = {
-        user: {
-          id: user.id,
-          id_seller: user.sellerProfile.id,
-          email: user.email,
-          username: user.username,
-          roles: "SELLER",
-        },
-      };
-      const newToken = jwt.sign(payload, config.jwt_key.access_key, {
-        expiresIn: "10m",
-      });
+  if (!user) {
+    throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
+  }
 
-      return newToken;
-    }
-
-    if (token.roles === "SELLER") {
-      console.log("Masuk sini");
-      const payload = {
-        user: {
-          id: user.id,
-          id_buyer: user.buyerProfile.id,
-          email: user.email,
-          username: user.username,
-          roles: "BUYER",
-        },
-      };
-      const newToken = jwt.sign(payload, config.jwt_key.access_key, {
-        expiresIn: "10m",
-      });
-
-      return newToken;
-    }
-  } else {
-    throw new UnauthorizedError(
-      "Akun seller/user tidak ditemukan",
-      "ACCOUNT_NOT_FOUND"
+  if (decoded.user.active_role === targetRole) {
+    throw new BadRequestError(
+      "User is already in the target role",
+      "ROLE_ALREADY_ACTIVE"
     );
   }
-}
+
+  try {
+    const payload = buildUserPayload(user, targetRole);
+
+    console.log(payload);
+    const newAccessToken = jwt.sign(payload, config.jwt_key.access_key, {
+      expiresIn: "10m",
+    });
+
+    return {
+      accessToken: newAccessToken,
+      user: payload.user,
+    };
+  } catch (error) {
+    if (error.message.includes("does not have access to")) {
+      throw new ForbiddenError(
+        `User does not have access to ${targetRole} role`,
+        "ROLE_ACCESS_DENIED"
+      );
+    }
+    if (error.message.includes("Required profile for")) {
+      throw new NotFoundError(
+        `Required profile for ${targetRole} role not found`,
+        "PROFILE_NOT_FOUND"
+      );
+    }
+    throw error;
+  }
+};
 
 export default {
   registerUser,

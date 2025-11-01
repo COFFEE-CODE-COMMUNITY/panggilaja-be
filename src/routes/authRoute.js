@@ -43,6 +43,11 @@ authRouter.post(
   authController.resetPassword
 );
 
-authRouter.post("/change-user", validateToken, authController.switchUser);
+authRouter.post(
+  "/change-user",
+  validateToken,
+  validate(authValidation.switchUserSchema),
+  authController.switchUser
+);
 
 export default authRouter;

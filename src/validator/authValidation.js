@@ -95,6 +95,17 @@ const resetPasswordSchema = Joi.object({
 });
 
 /* =======================
+   SWITCH USER
+======================= */
+const switchUserSchema = Joi.object({
+  targetRole: Joi.string().valid("buyer", "seller").required().messages({
+    "string.base": "Target role harus berupa teks",
+    "any.only": "Target role harus 'buyer' atau 'seller'",
+    "any.required": "Target role wajib diisi",
+  }),
+});
+
+/* =======================
    EXPORT
 ======================= */
 export default {
@@ -104,4 +115,5 @@ export default {
   requestResetSchema,
   verifyResetSchema,
   resetPasswordSchema,
+  switchUserSchema,
 };
