@@ -39,7 +39,7 @@ enum OrderStatus {
 model User {
   id             String           @id @default(uuid())
   email          String           @unique
-  password       String
+  password       String?
   username       String?
   login_provider LoginProvider
   oauth_id       String?
@@ -81,6 +81,7 @@ model BuyerProfile {
   ordersBuyer    Order[]
   alamat          AlamatBuyer[]
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages  Message[] @relation("BuyerMessages")
 }
 
 model AlamatBuyer{
@@ -112,8 +113,9 @@ model SellerProfile {
   services         Service[]
   ordersSeller     Order[]
   documentations   Documentation[]
-  alamat            AlamatSeller?
-  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  alamat           AlamatSeller?
+  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages         Message[] @relation("SellerMessages")
 }
 
 model AlamatSeller{
@@ -212,7 +214,7 @@ model FavoriteService {
   created_at DateTime @default(now())
 
   user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  service Service @relation(fields: [service_id], references: [id])
+  service Service @relation(fields: [service_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, service_id])
 }
@@ -252,4 +254,20 @@ model PasswordReset {
   created_at  DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+//
+// MESSAGES MODELS
+//
+model Message {
+  id           String    @id @default(uuid())
+  buyer_id     String
+  seller_id    String
+  text         String?
+  image        String?
+  seen         Boolean  @default(false)
+  created_at   DateTime  @default(now())
+
+  buyer        BuyerProfile?   @relation("BuyerMessages", fields: [buyer_id], references: [id], onDelete: Cascade)
+  seller       SellerProfile?   @relation("SellerMessages", fields: [seller_id], references: [id], onDelete: Cascade)
 }
