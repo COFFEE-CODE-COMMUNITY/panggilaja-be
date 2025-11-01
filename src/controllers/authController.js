@@ -147,17 +147,20 @@ const switchUser = async (req, res, next) => {
   try {
     const { targetRole } = req.body;
     if (!targetRole) {
-      throw new BadRequestError("Target role is required", "MISSING_TARGET_ROLE");
+      throw new BadRequestError(
+        "Target role is required",
+        "MISSING_TARGET_ROLE"
+      );
     }
 
     const result = await authService.switchUser({
-      currentToken: req.headers.authorization?.replace('Bearer ', ''),
-      targetRole
+      currentToken: req.headers.authorization?.replace("Bearer ", ""),
+      targetRole,
     });
     res.json({
       status: "success",
       message: "User role switched successfully",
-      data: { user: result },
+      data: { user: result.user, accessToken: result.accessToken },
     });
   } catch (e) {
     next(e);
