@@ -5,16 +5,16 @@ import upload from "../middleware/upload.js";
 
 const publicSellerRoute = Router();
 publicSellerRoute.get("/", sellerController.getAllSeller);
+publicSellerRoute.get(
+  "/:id/services",
+  sellerController.getAllServiceByIdSeller
+);
 
 const protectedSellerRoute = Router();
 // Token Validation
 protectedSellerRoute.use(validateToken);
 // Seller Routes
 protectedSellerRoute.get("/:id", sellerController.getSellerById);
-protectedSellerRoute.get(
-  "/:id/services",
-  sellerController.getAllServiceByIdSeller
-);
 protectedSellerRoute.post(
   "/",
   upload.single("file"),
