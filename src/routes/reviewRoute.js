@@ -4,7 +4,7 @@ import validateToken from "../middleware/validateToken.js";
 
 const router = express.Router();
 
-application.use(validateToken);
+router.use(validateToken);
 
 router.post("/", reviewController.createReview); //
 router.get("/service/:serviceId", reviewController.getReviewsByService);

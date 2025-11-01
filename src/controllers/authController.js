@@ -167,6 +167,10 @@ const switchUser = async (req, res, next) => {
   }
 };
 
+const googleCallback = async (req, res) => {
+  res.redirect("/api/auth/profile");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -176,4 +180,5 @@ export default {
   verifyReset,
   resetPassword,
   switchUser,
+  googleCallback,
 };

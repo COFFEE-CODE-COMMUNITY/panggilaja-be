@@ -184,16 +184,77 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         user_id:
           type: string
+          format: uuid
         service_id:
           type: string
+          format: uuid
         rating:
           type: number
           example: 5
         komentar:
           type: string
           example: Pelayanan sangat memuaskan!
+
+    CreateReviewRequest:
+      type: object
+      required: [service_id, rating]
+      properties:
+        service_id:
+          type: string
+          format: uuid
+          example: "8744af00-63d5-4f9c-b01c-8b2b8d828e52"
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 5
+        komentar:
+          type: string
+          example: Pelayanan sangat memuaskan!
+
+    CreateOrderRequest:
+      type: object
+      required: [service_id]
+      properties:
+        service_id:
+          type: string
+          format: uuid
+          example: "8744af00-63d5-4f9c-b01c-8b2b8d828e52"
+        notes:
+          type: string
+          example: "Tolong datang pukul 14:00"
+
+    UpdateOrderStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, in_progress, completed, cancelled]
+          example: in_progress
+
+    AddressRequest:
+      type: object
+      required: [alamat, provinsi, kota, kecamatan, kode_pos]
+      properties:
+        alamat:
+          type: string
+          example: Jl. Sekeloa Kubangsari 4
+        provinsi:
+          type: string
+          example: Jawa Barat
+        kota:
+          type: string
+          example: Bandung
+        kecamatan:
+          type: string
+          example: Coblong
+        kode_pos:
+          type: string
+          example: "40123"
 
     Documentation:
       type: object
@@ -370,16 +431,6 @@ paths:
       tags: [Auth]
       summary: Refresh access token
       description: Membuat access token baru menggunakan refresh token di cookie.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                refreshToken:
-                  type: string
-                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
         "200":
           description: Token berhasil diperbarui
@@ -539,6 +590,39 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /auth/google:
+    get:
+      tags: [Auth]
+      summary: Login dengan Google OAuth
+      description: Redirect ke Google OAuth untuk autentikasi
+      responses:
+        "302":
+          description: Redirect ke Google OAuth
+
+  /auth/google/callback:
+    get:
+      tags: [Auth]
+      summary: Google OAuth callback
+      description: Callback endpoint untuk Google OAuth
+      responses:
+        "200":
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+              example:
+                status: success
+                message: User login successfully via Google
+                data:
+                  user:
+                    accessToken: "jwt-token"
+                    refreshToken: "refresh-token"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /users/{id}:
     get:
       tags: [Users]
@@ -678,6 +762,72 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+    post:
+      tags: [Users]
+      summary: Menambah alamat baru
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddressRequest"
+      responses:
+        "201":
+          description: Alamat berhasil ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Address"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [Users]
+      summary: Menghapus alamat user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID user
+        - name: addressId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID alamat yang akan dihapus
+      responses:
+        "200":
+          description: Alamat berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+              example:
+                status: success
+                message: Address deleted successfully
+                data: {}
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /users/{id}/orders:
     get:
       tags: [Users]
@@ -731,7 +881,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
-  /users/favorites:
+  /favorites:
     post:
       tags: [Favorites]
       summary: Tambah layanan ke daftar favorit
@@ -744,12 +894,14 @@ paths:
           application/json:
             schema:
               type: object
+              required: [service_id]
               properties:
                 service_id:
                   type: string
+                  format: uuid
                   example: 8744af00-63d5-4f9c-b01c-8b2b8d828e52
       responses:
-        "200":
+        "201":
           description: Favorit berhasil ditambahkan
           content:
             application/json:
@@ -765,6 +917,35 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /favorites/{id}:
+    delete:
+      tags: [Favorites]
+      summary: Hapus layanan dari daftar favorit
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID favorit yang akan dihapus
+      responses:
+        "200":
+          description: Favorit berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+              example:
+                status: success
+                message: Favorite deleted successfully
+                data: {}
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /users/{id}/services:
     get:
@@ -1123,6 +1304,42 @@ paths:
                 items:
                   $ref: "#/components/schemas/Documentation"
 
+  /orders:
+    post:
+      tags: [Orders]
+      summary: Membuat pesanan baru
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Pesanan berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+              example:
+                status: success
+                message: Order added successfully!
+                data:
+                  id: "order-uuid"
+                  buyer_id: "user-uuid"
+                  service_id: "service-uuid"
+                  status: pending
+                  total_price: 150000
+                  notes: "Tolong datang pukul 14:00"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /orders/{id}:
     get:
       tags: [Orders]
@@ -1144,6 +1361,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
 
+  /orders/{id}/status:
     put:
       tags: [Orders]
       summary: Update status pesanan
@@ -1157,14 +1375,11 @@ paths:
             type: string
           description: ID pesanan
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                status:
-                  type: string
-                  enum: [pending, in_progress, completed, cancelled]
+              $ref: "#/components/schemas/UpdateOrderStatusRequest"
       responses:
         "200":
           description: Status pesanan berhasil diperbarui
@@ -1172,7 +1387,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
+  /orders/{id}:
     delete:
       tags: [Orders]
       summary: Hapus pesanan
@@ -1192,6 +1414,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /docs/{id}:
     put:
@@ -1239,6 +1465,58 @@ paths:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
 
+  /reviews:
+    post:
+      tags: [Reviews]
+      summary: Membuat review baru
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Review berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+              example:
+                status: success
+                message: Review created successfully
+                data:
+                  id: "review-uuid"
+                  user_id: "user-uuid"
+                  service_id: "service-uuid"
+                  rating: 5
+                  komentar: "Pelayanan sangat memuaskan!"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    get:
+      tags: [Reviews]
+      summary: Mendapatkan review milik user yang sedang login
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Review user berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
   /reviews/service/{serviceId}:
     get:
       tags: [Reviews]
@@ -1261,6 +1539,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Review"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /reviews/seller/{sellerId}:
     get:
@@ -1284,3 +1564,5 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Review"
+        "401":
+          $ref: "#/components/responses/Unauthorized"

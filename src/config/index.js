@@ -16,6 +16,8 @@ const config = {
     refresh_key: process.env.REFRESH_TOKEN_SECRET,
   },
   brevo_api_key: process.env.BREVO_API_KEY,
+  google_client_id: process.env.GOOGLE_CLIENT_ID,
+  google_client_secret: process.env.GOOGLE_CLIENT_SECRET,
 };
 
 export default config;
