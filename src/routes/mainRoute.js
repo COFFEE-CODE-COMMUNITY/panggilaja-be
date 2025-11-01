@@ -6,6 +6,7 @@ import sellerRouter from "./sellerRoute.js";
 import orderRouter from "./orderRoute.js";
 import favoriteRouter from "./favoriteRoute.js";
 import docsRouter from "./docsRoute.js";
+import chatRouter from "./chatRoute.js";
 
 const router = Router();
 
@@ -39,7 +40,7 @@ router.use("/docs", docsRouter);
 // Favorite Route
 router.use("/favorites", favoriteRouter);
 
-// Review Route
-// router.use("/reviews");
+// Message Route
+router.use("/chat", chatRouter);
 
 export default router;

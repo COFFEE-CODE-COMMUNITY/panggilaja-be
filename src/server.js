@@ -1,16 +1,33 @@
+import { createServer } from "http";
+import { Server } from "socket.io";
 import createApp from "./app.js";
 import config from "./config/index.js";
+import registerChatHandlers from "./utils/socketHandler.js";
 
 const app = createApp();
+const httpServer = createServer(app);
 
-const server = app.listen(config.port, () => {
-  console.info(`Server running on port : ${config.port}`);
-  console.log("Swagger docs available at http://localhost:5000/docs");
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
 });
 
-server.on("error", (err) => {
-  console.info(`Failed to start server: ${err}`);
-  process.exit(1);
+io.on("connection", (socket) => {
+  console.log("✅ New client connected:", socket.id);
+
+  registerChatHandlers(io, socket);
+
+  socket.on("disconnect", () => {
+    console.log("❌ Client disconnected:", socket.id);
+  });
+});
+
+httpServer.listen(config.port, () => {
+  console.info(`🚀 Server running on port ${config.port}`);
+  console.info("📚 Swagger docs available at http://localhost:5000/docs");
 });
 
 process.on("uncaughtException", (err) => {
