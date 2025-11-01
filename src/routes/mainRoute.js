@@ -7,8 +7,13 @@ import orderRouter from "./orderRoute.js";
 import favoriteRouter from "./favoriteRoute.js";
 import docsRouter from "./docsRoute.js";
 import chatRouter from "./chatRoute.js";
+import oauthRouter from "./oauthRoute.js";
+import reviewRouter from "./reviewRoute.js";
 
 const router = Router();
+
+// OAuth Route (untuk Google OAuth)
+router.use("/", oauthRouter);
 
 // Auth Route
 router.use("/auth", authRouter);
@@ -42,5 +47,8 @@ router.use("/favorites", favoriteRouter);
 
 // Message Route
 router.use("/chat", chatRouter);
+// Review Route
+router.use("/reviews", reviewRouter);
+
 
 export default router;
