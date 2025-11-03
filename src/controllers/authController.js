@@ -24,28 +24,23 @@ const registerUser = async (req, res, next) => {
 
 const loginUser = async (req, res, next) => {
   try {
-    // ⚠️ PERBAIKAN: Destructure token dengan benar
-    const { accessToken, refreshToken, user } = await authService.loginUser(
-      req.body
-    );
+    const { accessToken, refreshToken } = await authService.loginUser(req.body);
 
-    // Set refresh token di cookie (HTTP-only untuk keamanan)
+    // ✅ Set refresh token di cookie (HTTP-only untuk keamanan)
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true, // ✅ Ubah ke true untuk keamanan
-      secure: process.env.NODE_ENV === "production", // true kalau production (HTTPS)
-      sameSite: "lax", // penting untuk cross-origin
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/",
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 tahun
     });
 
-    // Access token dikirim di response body (akan disimpan di localStorage)
+    // ✅ Access token dikirim di response body
     res.status(200).json({
       status: "success",
       message: "User login successfully",
       data: {
-        user: {
-          accessToken,
-        },
+        accessToken, // ✅ Kirim langsung, bukan nested di user
       },
     });
   } catch (e) {
@@ -55,27 +50,40 @@ const loginUser = async (req, res, next) => {
 
 const refreshToken = async (req, res, next) => {
   try {
-    console.log("🔄 Refresh token endpoint dipanggil");
-    console.log("Cookies:", req.cookies);
+    console.log("🔄 Refresh token endpoint called");
+    console.log("📦 Cookies received:", req.cookies);
 
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
-      console.error("❌ Refresh token tidak ditemukan di cookies");
+      console.error("❌ Refresh token not found in cookies");
       throw new BadRequestError("Refresh token missing", "TOKEN_MISSING");
     }
 
-    console.log("✅ Refresh token ditemukan, memproses...");
+    console.log("✅ Refresh token found, processing...");
     const accessToken = await authService.refreshAccessToken({ refreshToken });
 
-    console.log("✅ Access token baru berhasil dibuat");
+    console.log("✅ New access token created successfully");
+    
+    // ✅ PERBAIKAN: Return dengan struktur yang konsisten
     res.status(200).json({
       status: "success",
-      message: "New access token created",
-      data: { accessToken },
+      message: "Access token refreshed",
+      data: {
+        accessToken, // ✅ Pastikan ini ada di response
+      },
     });
   } catch (e) {
-    console.error("❌ Error saat refresh token:", e);
+    console.error("❌ Error during token refresh:", e.message);
+    
+    // ✅ Clear cookie jika refresh gagal
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+    });
+    
     next(e);
   }
 };
@@ -89,11 +97,11 @@ const logoutUser = async (req, res, next) => {
 
     await authService.logoutUser({ refreshToken });
 
-    // Clear cookie
+    // ✅ Clear cookie
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/",
     });
 
@@ -150,7 +158,10 @@ const switchUser = async (req, res, next) => {
     res.json({
       status: "success",
       message: "User role switched successfully",
-      data: { user: result.user, accessToken: result.accessToken },
+      data: { 
+        accessToken: result.accessToken, // ✅ Kirim accessToken
+        user: result.user 
+      },
     });
   } catch (e) {
     next(e);
