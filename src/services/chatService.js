@@ -1,6 +1,4 @@
 import prisma from "../database/prisma.js";
-// import NotFoundError from "../exceptions/NotFoundError.js";
-// import cloudinary from "../utils/cloudinary.js";
 
 // buyer
 const getSellersForSidebar = async (buyer_id) => {
@@ -87,8 +85,8 @@ const getBuyersForSidebar = async (seller_id) => {
 
         return {
           id: contact.buyer.id,
-          nama: contact.buyer.nama,
-          foto_profile: contact.buyer.foto_profile,
+          nama: contact.buyer.fullname,
+          foto_profile: contact.buyer.foto_buyer,
           lastMessage,
           unreadCount,
         };
@@ -105,8 +103,11 @@ const getBuyersForSidebar = async (seller_id) => {
 const getMessages = async (roles, myId, partner_id) => {
   try {
     let messages;
+    const normalizedRole = roles.toUpperCase();
 
-    if (roles === "buyer") {
+    console.log("📩 Fetching messages:", { normalizedRole, myId, partner_id });
+
+    if (normalizedRole === "BUYER") {
       messages = await prisma.message.findMany({
         where: {
           buyer_id: myId,
@@ -123,7 +124,7 @@ const getMessages = async (roles, myId, partner_id) => {
         },
         data: { seen: true },
       });
-    } else if (roles === "seller") {
+    } else if (normalizedRole === "SELLER") {
       messages = await prisma.message.findMany({
         where: {
           buyer_id: partner_id,
@@ -142,20 +143,27 @@ const getMessages = async (roles, myId, partner_id) => {
       });
     }
 
+    console.log(`✅ Found ${messages?.length || 0} messages`);
+
     return messages;
   } catch (err) {
-    console.error("Error fetching messages:", err.message);
+    console.error("❌ Error fetching messages:", err.message);
     throw err;
   }
 };
 
-const sendMessage = async (id_buyer, id_seller, data) => {
+const sendMessage = async (id_buyer, id_seller, data, sender_role) => {
   try {
-    const newMessage = await prisma.Message.create({
+    const newMessage = await prisma.message.create({
       data: {
-        seller_id: id_seller,
-        buyer_id: id_buyer,
         text: data.text,
+        sender_role: sender_role,
+        buyer: {
+          connect: { id: id_buyer },
+        },
+        seller: {
+          connect: { id: id_seller },
+        },
       },
     });
 
@@ -166,21 +174,9 @@ const sendMessage = async (id_buyer, id_seller, data) => {
   }
 };
 
-const markMessagesAsSeen = async (buyerId, sellerId) => {
-  await prisma.message.updateMany({
-    where: {
-      buyer_id: buyerId,
-      seller_id: sellerId,
-      seen: false,
-    },
-    data: { seen: true },
-  });
-};
-
 export default {
   getSellersForSidebar,
   getBuyersForSidebar,
   getMessages,
   sendMessage,
-  markMessagesAsSeen,
 };

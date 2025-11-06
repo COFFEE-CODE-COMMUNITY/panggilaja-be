@@ -47,8 +47,15 @@ const getBuyersForSidebar = async (req, res, next) => {
 
 const getMessages = async (req, res, next) => {
   try {
-    const { partner_id } = req.params;
-    const { roles, id: myId } = req.user;
+    const { id: partner_id } = req.params;
+    const { active_role: roles } = req.user;
+
+    let myId;
+    if (roles === "buyer") {
+      myId = req.user.id_buyer;
+    } else if (roles === "seller") {
+      myId = req.user.id_seller;
+    }
 
     const messages = await chatService.getMessages(roles, myId, partner_id);
 
@@ -64,26 +71,54 @@ const getMessages = async (req, res, next) => {
 
 const sendMessage = async (req, res, next) => {
   try {
-    const roles = req.user.roles;
+    const { active_role: roles } = req.user;
+    const data = req.body;
+
     let id_buyer;
     let id_seller;
+    let senderId;
+    let receiverId;
 
-    if (roles === "BUYER") {
+    if (roles === "buyer") {
       id_buyer = req.user.id_buyer;
-      id_seller = "2a2d2292-204f-47ca-911c-6cf8555e9a04";
+      id_seller = data.receiverId;
+      senderId = id_buyer;
+      receiverId = id_seller;
     } else {
       id_seller = req.user.id_seller;
-      id_buyer = "0fa64eb0-9d14-4ed2-8f97-13ef6e5dc5af";
+      id_buyer = data.receiverId;
+      senderId = id_seller;
+      receiverId = id_buyer;
     }
 
-    const data = req.body;
-    const result = await chatService.sendMessage(id_buyer, id_seller, data);
+    const result = await chatService.sendMessage(
+      id_buyer,
+      id_seller,
+      data,
+      roles.toUpperCase()
+    );
+
+    const roomId = `${id_buyer}_${id_seller}`;
+
+    if (req.io) {
+      req.io.to(roomId).emit("receive_message", result);
+      console.log(`📣 Emitting message to room ${roomId}`);
+    } else {
+      console.log("Socket.io (io) not attached to request. Skipping emit.");
+    }
+
+    console.log(`📣 Emitting message to room ${roomId}`, {
+      from: senderId,
+      to: receiverId,
+    });
+
     res.status(201).json({
       status: "success",
       message: "Message has been added!",
       data: result,
     });
   } catch (error) {
+    console.error("❌ Error in sendMessage:", error);
     next(error);
   }
 };
