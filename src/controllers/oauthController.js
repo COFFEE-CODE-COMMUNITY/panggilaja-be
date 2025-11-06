@@ -13,7 +13,7 @@ const authCallbackController = async (req, res, next) => {
     res.cookie("refreshToken", authData.refreshToken, {
       httpOnly: true, // ✅ Ubah ke true untuk keamanan
       secure: process.env.NODE_ENV === "production", // true kalau production (HTTPS)
-      sameSite: "none", // penting untuk cross-origin
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/",
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 tahun
     });
