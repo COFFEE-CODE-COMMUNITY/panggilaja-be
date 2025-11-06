@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import UnauthorizedError from "../exceptions/UnauthorizedError.js";
+import config from "../config/index.js";
 
 const validateToken = async (req, res, next) => {
   try {
@@ -16,8 +17,7 @@ const validateToken = async (req, res, next) => {
         return next(error);
       }
 
-      console.log("Masuk sini")
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      jwt.verify(token, config.jwt_key.access_key, (err, decoded) => {
         if (err) {
           if (err.message === "jwt expired") {
             throw new UnauthorizedError("Token already expired");
@@ -30,7 +30,7 @@ const validateToken = async (req, res, next) => {
         return next();
       });
 
-      console.log("Apakah masuk sini")
+      console.log("Apakah masuk sini");
       return;
     }
 

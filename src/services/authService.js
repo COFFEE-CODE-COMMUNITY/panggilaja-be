@@ -13,10 +13,6 @@ const buildUserPayload = (user, activeRole) => {
     throw new Error("User object is required");
   }
 
-  if (!activeRole || (activeRole !== "buyer" && activeRole !== "seller")) {
-    throw new Error("Active role must be either 'buyer' or 'seller'");
-  }
-
   const availableRoles = ["buyer"];
 
   if (user.sellerProfile && user.roles.some((role) => role.role === "SELLER")) {

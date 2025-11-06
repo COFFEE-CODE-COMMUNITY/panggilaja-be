@@ -4,6 +4,97 @@ import { oauth2Client } from "../utils/oauthClient.js";
 import jwt from "jsonwebtoken";
 import config from "../config/index.js";
 
+async function findOrCreateUserGoogle(data) {
+  return await prisma.$transaction(async (tx) => {
+    let existingUser = await tx.user.findUnique({
+      where: { email: data.email },
+      include: {
+        buyerProfile: true,
+        sellerProfile: true,
+        roles: true,
+      },
+    });
+
+    if (!existingUser) {
+      const newUser = await tx.user.create({
+        data: {
+          username: data.name || data.email.split("@")[0],
+          email: data.email,
+          password: null, // karena OAuth
+          login_provider: "google",
+          oauth_id: data.id,
+        },
+      });
+
+      await tx.userRoleMap.create({
+        data: {
+          user_id: newUser.id,
+          role: "USER",
+        },
+      });
+
+      const buyerProfile = await tx.buyerProfile.create({
+        data: {
+          user_id: newUser.id,
+          fullname: newUser.username,
+          total_order: 0,
+        },
+      });
+
+      await tx.alamatBuyer.create({
+        data: {
+          id_buyer: buyerProfile.id,
+          alamat: null,
+          provinsi: null,
+          kota: null,
+          kecamatan: null,
+          kode_pos: null,
+        },
+      });
+
+      return newUser;
+    }
+
+    return existingUser;
+  });
+}
+
+const buildUserPayload = (user, activeRole) => {
+  if (!user) {
+    throw new Error("User object is required");
+  }
+
+  const availableRoles = ["buyer"];
+
+  if (user.sellerProfile && user.roles.some((role) => role.role === "SELLER")) {
+    availableRoles.push("seller");
+  }
+
+  if (!availableRoles.includes(activeRole)) {
+    throw new Error(`User does not have access to ${activeRole} role`);
+  }
+
+  const payload = {
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      active_role: activeRole,
+      available_roles: availableRoles,
+    },
+  };
+
+  if (activeRole === "buyer" && user.buyerProfile) {
+    payload.user.id_buyer = user.buyerProfile.id;
+  } else if (activeRole === "seller" && user.sellerProfile) {
+    payload.user.id_seller = user.sellerProfile.id;
+  } else {
+    throw new Error(`Required profile for ${activeRole} role not found`);
+  }
+
+  return payload;
+};
+
 async function authCallback(code) {
   try {
     if (!code) throw new Error("Missing authorization code");
@@ -18,109 +109,10 @@ async function authCallback(code) {
     if (!data.email) throw new Error("Email tidak ditemukan dari Google");
 
     // Transaction: cari atau buat user. Gunakan field yang ada di schema.prisma
-    const user = await prisma.$transaction(async (tx) => {
-      let existing = await tx.user.findUnique({
-        where: { email: data.email },
-      });
-
-      if (!existing) {
-        existing = await tx.user.create({
-          data: {
-            email: data.email,
-            username: data.name,
-            oauth_id: data.id,
-            login_provider: "google", // sesuaikan dengan enum di schema.prisma jika berbeda
-          },
-        });
-
-        console.log(existing);
-
-        await tx.userRoleMap.create({
-          data: {
-            user_id: existing.id,
-            role: "USER",
-          },
-        });
-
-        const buyerProfile = await tx.buyerProfile.create({
-          data: {
-            user_id: existing.id,
-            fullname: existing.username,
-            total_order: 0,
-          },
-        });
-
-        await tx.alamatBuyer.create({
-          data: {
-            id_buyer: buyerProfile.id,
-            alamat: null,
-            provinsi: null,
-            kota: null,
-            kecamatan: null,
-            kode_pos: null,
-          },
-        });
-
-        // Reload user with relationships
-        existing = await tx.user.findUnique({
-          where: { id: existing.id },
-          include: { buyerProfile: true, roles: true },
-        });
-        console.log(existing);
-      } else if (!existing.oauth_id) {
-        existing = await tx.user.update({
-          where: { id: existing.id },
-          data: { oauth_id: data.id, login_provider: "google" },
-        });
-
-        // Also reload existing user to get buyerProfile
-        existing = await tx.user.findUnique({
-          where: { id: existing.id },
-          include: { buyerProfile: true, roles: true },
-        });
-
-        // If existing user doesn't have buyerProfile, create one
-        if (!existing.buyerProfile) {
-          const buyerProfile = await tx.buyerProfile.create({
-            data: {
-              user_id: existing.id,
-              fullname: existing.username || data.name,
-              total_order: 0,
-            },
-          });
-
-          await tx.alamatBuyer.create({
-            data: {
-              id_buyer: buyerProfile.id,
-              alamat: null,
-              provinsi: null,
-              kota: null,
-              kecamatan: null,
-              kode_pos: null,
-            },
-          });
-
-          // Reload user again to include buyerProfile
-          existing = await tx.user.findUnique({
-            where: { id: existing.id },
-            include: { buyerProfile: true, roles: true },
-          });
-        }
-      }
-
-      return existing;
-    });
+    const user = await findOrCreateUserGoogle(data);
 
     // Generate JWT tokens
-    const payload = {
-      user: {
-        id: user.id,
-        id_buyer: user.buyerProfile?.id || null,
-        email: user.email,
-        username: user.username,
-        roles: "BUYER",
-      },
-    };
+    const payload = buildUserPayload(user, "buyer");
 
     const accessToken = jwt.sign(payload, config.jwt_key.access_key, {
       expiresIn: "10m",
@@ -130,7 +122,6 @@ async function authCallback(code) {
       expiresIn: "365d",
     });
 
-    // Store refresh token in database
     const { exp } = jwt.decode(refreshToken);
     await prisma.refreshToken.create({
       data: {
@@ -145,7 +136,6 @@ async function authCallback(code) {
         id: user.id,
         email: user.email,
         username: user.username,
-        role: "BUYER",
       },
       accessToken,
       refreshToken,
@@ -156,4 +146,4 @@ async function authCallback(code) {
   }
 }
 
-export { authCallback };
+export { authCallback, findOrCreateUserGoogle };
