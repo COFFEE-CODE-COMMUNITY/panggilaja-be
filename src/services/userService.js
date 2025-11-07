@@ -271,6 +271,7 @@ const getServicesByPlace = async (kecamatan) => {
         jumlah_rating: true,
         jumlah_pembeli: true,
         seller_id: true,
+        kategori_id: true,
       },
     });
 
@@ -300,37 +301,35 @@ const getFavoriteServices = async (id) => {
 // userService.js - Perbaikan untuk addNewFavoriteService
 
 const addNewFavoriteService = async (id, serviceId) => {
-  try {
-    if (!serviceId) throw new NotFoundError("Service not found");
-    
-    // 1. Periksa apakah favorit sudah ada
-    const existingFavorite = await prisma.FavoriteService.findUnique({
-      where: {
-        user_id_service_id: { // ASUMSI Anda memiliki unique index pada {user_id, service_id}
-          user_id: id,
-          service_id: serviceId,
-        }
-      }
-    });
+  try {
+    if (!serviceId) throw new NotFoundError("Service not found"); // 1. Periksa apakah favorit sudah ada
+    const existingFavorite = await prisma.FavoriteService.findUnique({
+      where: {
+        user_id_service_id: {
+          // ASUMSI Anda memiliki unique index pada {user_id, service_id}
+          user_id: id,
+          service_id: serviceId,
+        },
+      },
+    });
 
-    if (existingFavorite) {
-      // 💡 Jika sudah ada, kembalikan data yang ada saja (sukses tanpa create)
-      return { message: "Service already favorited", data: existingFavorite }; 
-    }
+    if (existingFavorite) {
+      // 💡 Jika sudah ada, kembalikan data yang ada saja (sukses tanpa create)
+      return { message: "Service already favorited", data: existingFavorite };
+    } // 2. Jika belum ada, baru create
 
-    // 2. Jika belum ada, baru create
-    const addFavorite = await prisma.FavoriteService.create({
-      data: {
-        user_id: id,
-        service_id: serviceId,
-      },
-    });
+    const addFavorite = await prisma.FavoriteService.create({
+      data: {
+        user_id: id,
+        service_id: serviceId,
+      },
+    });
 
-    return { message: "Service added to favorites", data: addFavorite };
-  } catch (err) {
-    console.error("Error add favorite:", err.message);
-    throw err;
-  }
+    return { message: "Service added to favorites", data: addFavorite };
+  } catch (err) {
+    console.error("Error add favorite:", err.message);
+    throw err;
+  }
 };
 
 // Seller
@@ -342,7 +341,11 @@ const getSellerById = async (id) => {
 
     if (!seller) throw new NotFoundError("Seller not found");
 
-    return seller;
+    const addressSeller = await prisma.AlamatSeller.findUnique({
+      where: { id_seller: id },
+    });
+
+    return { ...seller, address: { ...addressSeller } };
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
     throw err;
