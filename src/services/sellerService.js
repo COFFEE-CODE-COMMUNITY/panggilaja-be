@@ -28,6 +28,7 @@ const getSellerById = async (id) => {
     const addressSeller = await prisma.AlamatSeller.findUnique({
       where: { id_seller: id },
     });
+
     return { ...seller, address: { ...addressSeller } };
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
