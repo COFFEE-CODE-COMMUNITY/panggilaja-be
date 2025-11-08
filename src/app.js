@@ -20,7 +20,11 @@ const createApp = () => {
   app.use(cookieParser());
   app.use(
     cors({
-      origin: ["http://localhost:5174", "http://localhost:5173", "https:panggilaja.space"],
+      origin: [
+        "http://localhost:5174",
+        "http://localhost:5173",
+        "https://www.panggilaja.space",
+      ],
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
