@@ -12,7 +12,7 @@ const io = new Server(httpServer, {
     origin: [
       "http://localhost:5173",
       "http://localhost:5173",
-      "https://www.panggilaja.space",
+      "https://panggilaja.space",
     ],
     methods: ["GET", "POST"],
     credentials: true,
