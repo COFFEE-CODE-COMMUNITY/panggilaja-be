@@ -103,6 +103,30 @@ const sendMessage = async (req, res, next) => {
     if (req.io) {
       req.io.to(roomId).emit("receive_message", result);
       console.log(`📣 Emitting message to room ${roomId}`);
+
+      const buyerRoom = `user_buyer_${id_buyer}`;
+      req.io.to(buyerRoom).emit("contact_list_updated", {
+        type: "new_message",
+        partnerId: id_seller,
+        lastMessage: {
+          text: result.text,
+          created_at: result.created_at,
+        },
+        isNewContact: true,
+      });
+
+      const sellerRoom = `user_seller_${id_seller}`;
+      req.io.to(sellerRoom).emit("contact_list_updated", {
+        type: "new_message",
+        partnerId: id_buyer,
+        lastMessage: {
+          text: result.text,
+          created_at: result.created_at,
+        },
+        isNewContact: true,
+      });
+
+      console.log(`📬 Contact updates sent to ${buyerRoom} and ${sellerRoom}`);
     } else {
       console.log("Socket.io (io) not attached to request. Skipping emit.");
     }
