@@ -14,7 +14,7 @@ const createApp = () => {
   const app = express();
 
   // Middleware
-  const swaggerDocument = YAML.load("../openapi.yaml");
+  const swaggerDocument = YAML.load("./openapi.yaml");
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   app.use(express.json());
   app.use(cookieParser());

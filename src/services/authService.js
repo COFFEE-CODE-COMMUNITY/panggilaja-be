@@ -7,6 +7,7 @@ import BadRequestError from "../exceptions/BadRequestError.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
 import ForbiddenError from "../exceptions/ForbiddenError.js";
 import UnauthorizedError from "../exceptions/UnauthorizedError.js";
+import { token } from "morgan";
 
 const buildUserPayload = (user, activeRole) => {
   if (!user) {
@@ -110,7 +111,6 @@ const loginUser = async ({ email, password }) => {
     include: { roles: true, buyerProfile: true, sellerProfile: true },
   });
 
-  console.log(user);
   if (!user) throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
 
   const isValid = await bcrypt.compare(password, user.password || "");
@@ -171,12 +171,10 @@ const refreshAccessToken = async ({ refreshToken }) => {
     throw new ForbiddenError("Invalid refresh token", "TOKEN_INVALID");
   }
 
-  if (tokenData.user_id !== decoded.user.id) {
-    throw new ForbiddenError("Token mismatch", "TOKEN_INVALID");
-  }
+  const activeRole = decoded.user.active_role; // <-- Ambil dari token lama
 
   const accessToken = jwt.sign(
-    buildUserPayload(tokenData.user, decoded.user.active_role),
+    buildUserPayload(tokenData.user, activeRole),
     config.jwt_key.access_key,
     { expiresIn: "10m" }
   );
@@ -202,12 +200,11 @@ const logoutUser = async ({ refreshToken }) => {
 };
 
 const switchUser = async (currentToken) => {
-
-  let targetRole;
   if (!currentToken) {
     throw new BadRequestError("Current token is required", "TOKEN_MISSING");
   }
-  console.log(currentToken)
+
+  // Ambil data user dari database
   const user = await prisma.user.findUnique({
     where: { id: currentToken.id },
     include: { roles: true, buyerProfile: true, sellerProfile: true },
@@ -217,23 +214,56 @@ const switchUser = async (currentToken) => {
     throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
   }
 
-  if (currentToken.active_role === 'seller'){
-    targetRole = 'buyer'
-  }
-
-  if (currentToken.active_role === 'buyer'){
-    targetRole = 'seller'
+  // Tentukan role target
+  let targetRole;
+  if (currentToken.active_role === "buyer") {
+    targetRole = "seller";
+  } else if (currentToken.active_role === "seller") {
+    targetRole = "buyer";
+  } else {
+    throw new ForbiddenError("Invalid current role", "ROLE_INVALID");
   }
 
   try {
+    // Bangun payload baru sesuai role tujuan
     const payload = buildUserPayload(user, targetRole);
 
+    // Buat access token baru
     const newAccessToken = jwt.sign(payload, config.jwt_key.access_key, {
       expiresIn: "10m",
     });
 
+    // Buat refresh token baru untuk role baru
+    const newRefreshToken = jwt.sign(payload, config.jwt_key.refresh_key, {
+      expiresIn: "365d",
+    });
+
+    // Hitung expired date dari refresh token
+    const { exp } = jwt.decode(newRefreshToken);
+    const expiredAt = new Date(exp * 1000);
+
+    // Simpan refresh token baru dan revoke yang lama
+    await prisma.$transaction(async (tx) => {
+      // Revoke semua refresh token aktif user
+      await tx.refreshToken.updateMany({
+        where: { user_id: user.id, revoked: false },
+        data: { revoked: true },
+      });
+
+      // Simpan refresh token baru
+      await tx.refreshToken.create({
+        data: {
+          user_id: user.id,
+          token: newRefreshToken,
+          expired_at: expiredAt,
+        },
+      });
+    });
+
+    // Kembalikan hasilnya
     return {
       accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
       user: payload.user,
     };
   } catch (error) {
