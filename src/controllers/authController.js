@@ -26,7 +26,6 @@ const loginUser = async (req, res, next) => {
   try {
     const { accessToken, refreshToken } = await authService.loginUser(req.body);
 
-    // ✅ Set refresh token di cookie (HTTP-only untuk keamanan)
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -35,7 +34,6 @@ const loginUser = async (req, res, next) => {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 tahun
     });
 
-    // ✅ Access token dikirim di response body
     res.status(200).json({
       status: "success",
       message: "User login successfully",
@@ -65,18 +63,16 @@ const refreshToken = async (req, res, next) => {
 
     console.log("✅ New access token created successfully");
 
-    // ✅ PERBAIKAN: Return dengan struktur yang konsisten
     res.status(200).json({
       status: "success",
       message: "Access token refreshed",
       data: {
-        accessToken, // ✅ Pastikan ini ada di response
+        accessToken,
       },
     });
   } catch (e) {
     console.error("❌ Error during token refresh:", e.message);
 
-    // ✅ Clear cookie jika refresh gagal
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -154,6 +150,16 @@ const resetPassword = async (req, res, next) => {
 const switchUser = async (req, res, next) => {
   try {
     const result = await authService.switchUser(req.user);
+
+    console.log(result.refreshToken);
+
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 tahun
+    });
 
     res.json({
       status: "success",

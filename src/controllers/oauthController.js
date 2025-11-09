@@ -19,7 +19,7 @@ const authCallbackController = async (req, res, next) => {
     });
 
     // Redirect ke frontend dengan token dan user data sebagai query parameters
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = process.env.FRONTEND_URL || "https://panggilaja.space";
     const redirectUrl = `${frontendUrl}/auth/google/callback?token=${
       authData.accessToken
     }&user=${encodeURIComponent(JSON.stringify(authData.user))}`;
@@ -28,7 +28,7 @@ const authCallbackController = async (req, res, next) => {
   } catch (error) {
     console.error("OAuth callback error:", error);
     // Redirect ke frontend dengan error message
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = process.env.FRONTEND_URL || "http://panggilaja.space";
     res.redirect(`${frontendUrl}/login?error=Gagal login dengan Google`);
   }
 };
