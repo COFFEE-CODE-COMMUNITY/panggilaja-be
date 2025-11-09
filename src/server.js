@@ -9,14 +9,22 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173", // Development
+      "https://panggilaja.space", // Production frontend
+      "http://panggilaja.space", // Production HTTP (jika ada)
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 io.on("connection", (socket) => {
   console.log("✅ New client connected:", socket.id);
+  console.log("🔗 Transport:", socket.conn.transport.name);
 
   registerChatHandlers(io, socket);
 
@@ -28,6 +36,7 @@ io.on("connection", (socket) => {
 httpServer.listen(config.port, () => {
   console.info(`🚀 Server running on port ${config.port}`);
   console.info("📚 Swagger docs available at http://localhost:5000/docs");
+  console.info("🔌 Socket.IO ready for connections"); // 🔥 Tambah log socket ready
 });
 
 process.on("uncaughtException", (err) => {
