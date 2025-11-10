@@ -10,15 +10,9 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: [
-<<<<<<< HEAD
       "http://localhost:5173", // Development
       "https://panggilaja.space", // Production frontend
       "http://panggilaja.space", // Production HTTP (jika ada)
-=======
-      "http://localhost:5173",
-      "http://localhost:5173",
-      "https://panggilaja.space",
->>>>>>> dad38b72ecc4735b7b26aae5f5e63f49ad2fb0e8
     ],
     methods: ["GET", "POST"],
     credentials: true,
