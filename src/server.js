@@ -12,7 +12,6 @@ const io = new Server(httpServer, {
     origin: [
       "http://localhost:5173", // Development
       "https://panggilaja.space", // Production frontend
-      "http://panggilaja.space", // Production HTTP (jika ada)
     ],
     methods: ["GET", "POST"],
     credentials: true,
