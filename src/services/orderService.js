@@ -15,9 +15,9 @@ const getOrderById = async (id) => {
 const addNewOrder = async (buyerId, data) => {
   try {
     // cara sementara
-    const id_service = "c69e74c2-448b-40ff-9787-b4a1adb18223";
+    // const id_service = "c69e74c2-448b-40ff-9787-b4a1adb18223";
     const service = await prisma.Service.findUnique({
-      where: { id: id_service },
+      where: { id: data.id_service },
       select: {
         id: true,
         seller_id: true,
