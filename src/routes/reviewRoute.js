@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.use(validateToken);
 
-router.post("/", reviewController.createReview); //
-router.get("/service/:serviceId", reviewController.getReviewsByService);
+router.post("/service/:orderId", reviewController.createReview);
+router.get("/service/:orderId", reviewController.getReviewsByService);
 router.get("/seller/:sellerId", reviewController.getReviewsBySeller);
-router.get("/user", reviewController.getUserReviews);
+router.get("/user/:userId", reviewController.getUserReviews);
 
 export default router;

@@ -3,20 +3,22 @@ import BadRequestError from "../exceptions/BadRequestError.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
 import ForbiddenError from "../exceptions/ForbiddenError.js";
 
-const createReview = async ({ userId, service_id, rating, komentar }) => {
+const createReview = async ({ userId, serviceId, rating, komentar }) => {
   const service = await prisma.service.findUnique({
-    where: { id: service_id },
+    where: { id: serviceId },
   });
+
   if (!service)
     throw new NotFoundError("Service not found", "SERVICE_NOT_FOUND");
 
   const orderExist = await prisma.order.findFirst({
     where: {
       buyer_id: userId,
-      service_id,
+      serviceId,
       status: "completed",
     },
   });
+
   if (!orderExist)
     throw new ForbiddenError(
       "You can only review completed orders",
@@ -26,9 +28,10 @@ const createReview = async ({ userId, service_id, rating, komentar }) => {
   const existingReview = await prisma.review.findFirst({
     where: {
       user_id: userId,
-      service_id,
+      serviceId,
     },
   });
+
   if (existingReview)
     throw new BadRequestError(
       "You have already reviewed this service",
@@ -38,14 +41,14 @@ const createReview = async ({ userId, service_id, rating, komentar }) => {
   const newReview = await prisma.review.create({
     data: {
       user_id: userId,
-      service_id,
+      serviceId,
       rating,
       komentar,
     },
   });
 
   const reviews = await prisma.review.findMany({
-    where: { service_id },
+    where: { serviceId },
     select: { rating: true },
   });
 
@@ -53,18 +56,18 @@ const createReview = async ({ userId, service_id, rating, komentar }) => {
     reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
 
   await prisma.service.update({
-    where: { id: service_id },
+    where: { id: serviceId },
     data: {
-      updated_at: new Date(), 
+      updated_at: new Date(),
     },
   });
 
   return newReview;
 };
 
-const getReviewsByService = async (service_id) => {
+const getReviewsByService = async (serviceId) => {
   const reviews = await prisma.review.findMany({
-    where: { service_id },
+    where: { serviceId },
     include: {
       user: {
         select: {
@@ -107,7 +110,7 @@ const getReviewsBySeller = async (seller_id) => {
 
   // Ambil semua review dari semua jasa seller ini
   const reviews = await prisma.review.findMany({
-    where: { service_id: { in: serviceIds } },
+    where: { serviceId: { in: serviceIds } },
     include: {
       user: {
         select: {
@@ -123,10 +126,9 @@ const getReviewsBySeller = async (seller_id) => {
   return reviews;
 };
 
-
 export default {
   createReview,
   getReviewsByService,
   getReviewsByUser,
-  getReviewsBySeller
+  getReviewsBySeller,
 };

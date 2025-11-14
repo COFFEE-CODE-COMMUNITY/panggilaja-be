@@ -1,7 +1,18 @@
 import prisma from "../database/prisma.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
 
-const getOrderById = async (sellerId) => {
+const getAllOrderBuyer = async (buyer_id) => {
+  try {
+    const order = await prisma.Order.findMany({ where: { buyer_id } });
+    if (!order) throw new NotFoundError("Order not found");
+    return order;
+  } catch (error) {
+    console.error("Error fetching order:", err.message);
+    throw err;
+  }
+};
+
+const getOrderById = async (id) => {
   try {
     const orders = await prisma.Order.findMany({
       where: { seller_id: sellerId },
@@ -91,6 +102,8 @@ const addNewOrder = async (buyerId, data) => {
       },
     });
 
+    console.log(newOrder);
+
     return newOrder;
   } catch (err) {
     console.error("Error add new order:", err.message);
@@ -129,6 +142,7 @@ const deleteOrderById = async (id) => {
 };
 
 export default {
+  getAllOrderBuyer,
   getOrderById,
   addNewOrder,
   updateOrderById,

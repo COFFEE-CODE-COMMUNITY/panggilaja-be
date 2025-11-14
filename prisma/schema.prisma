@@ -42,8 +42,8 @@ enum SenderRole {
 // MAIN MODELS
 //
 model User {
-  id             String           @id @default(uuid())
-  email          String           @unique
+  id             String        @id @default(uuid())
+  email          String        @unique
   password       String?
   username       String?
   login_provider LoginProvider
@@ -83,10 +83,10 @@ model BuyerProfile {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  ordersBuyer    Order[]
-  alamat          AlamatBuyer[]
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  messages  Message[] @relation("BuyerMessages")
+  ordersBuyer Order[]
+  alamat      AlamatBuyer[]
+  user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages    Message[]     @relation("BuyerMessages")
 }
 
 model AlamatBuyer {
@@ -114,13 +114,13 @@ model SellerProfile {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  skill            Skill[]
-  services         Service[]
-  ordersSeller     Order[]
-  documentations   Documentation[]
-  alamat           AlamatSeller?
-  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  messages         Message[] @relation("SellerMessages")
+  skill          Skill[]
+  services       Service[]
+  ordersSeller   Order[]
+  documentations Documentation[]
+  alamat         AlamatSeller?
+  user           User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  messages       Message[]       @relation("SellerMessages")
 }
 
 model AlamatSeller {
@@ -265,15 +265,15 @@ model PasswordReset {
 // MESSAGES MODELS
 //
 model Message {
-  id           String    @id @default(uuid())
-  buyer_id     String
-  seller_id    String
-  text         String?
-  image        String?
-  seen         Boolean  @default(false)
-  created_at   DateTime  @default(now())
-  sender_role  SenderRole
+  id          String     @id @default(uuid())
+  buyer_id    String
+  seller_id   String
+  text        String?
+  image       String?
+  seen        Boolean    @default(false)
+  created_at  DateTime   @default(now())
+  sender_role SenderRole
 
-  buyer        BuyerProfile?   @relation("BuyerMessages", fields: [buyer_id], references: [id], onDelete: Cascade)
-  seller       SellerProfile?   @relation("SellerMessages", fields: [seller_id], references: [id], onDelete: Cascade)
+  buyer  BuyerProfile?  @relation("BuyerMessages", fields: [buyer_id], references: [id], onDelete: Cascade)
+  seller SellerProfile? @relation("SellerMessages", fields: [seller_id], references: [id], onDelete: Cascade)
 }
