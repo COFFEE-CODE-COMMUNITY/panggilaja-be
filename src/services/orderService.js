@@ -14,26 +14,67 @@ const getOrderById = async (id) => {
 
 const addNewOrder = async (buyerId, data) => {
   try {
-    // cara sementara
-    // const id_service = "c69e74c2-448b-40ff-9787-b4a1adb18223";
+    if (!data.id_service) {
+      throw new Error("Service ID is required");
+    }
+
     const service = await prisma.Service.findUnique({
       where: { id: data.id_service },
       select: {
         id: true,
         seller_id: true,
+        base_price: true,
+        top_price: true,
+        nama_jasa: true,
       },
     });
-    const total_harga = 500000;
 
-    if (!service) throw new NotFoundError(404, "Service not found");
+    if (!service) {
+      throw new NotFoundError(404, "Service not found");
+    }
+
+    let total_harga = service.base_price;
+
+    if (data.pesan_tambahan) {
+      const priceMatch = data.pesan_tambahan.match(/Rp\s*([\d.,]+)/);
+      if (priceMatch) {
+        const parsedPrice = parseFloat(
+          priceMatch[1].replace(/\./g, "").replace(",", ".")
+        );
+        if (parsedPrice > 0) {
+          total_harga = parsedPrice;
+        }
+      }
+    }
+
+    if (
+      total_harga < service.base_price * 0.3 ||
+      total_harga > service.top_price * 2
+    ) {
+      throw new Error("Harga tidak valid");
+    }
 
     const newOrder = await prisma.Order.create({
       data: {
         seller_id: service.seller_id,
-        pesan_tambahan: data.pesan_tambahan,
-        total_harga: total_harga,
-        service_id: service.id,
         buyer_id: buyerId,
+        service_id: service.id,
+        pesan_tambahan: data.pesan_tambahan || "",
+        total_harga: total_harga,
+        status: "in_progress",
+      },
+      include: {
+        service: {
+          select: {
+            nama_jasa: true,
+            foto_product: true,
+          },
+        },
+        seller: {
+          select: {
+            nama_toko: true,
+          },
+        },
       },
     });
 
