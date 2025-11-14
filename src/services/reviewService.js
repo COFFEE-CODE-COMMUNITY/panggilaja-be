@@ -3,7 +3,25 @@ import BadRequestError from "../exceptions/BadRequestError.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
 import ForbiddenError from "../exceptions/ForbiddenError.js";
 
-const createReview = async ({ userId, serviceId, rating, komentar }) => {
+const createReview = async ({ userId, orderId, rating, komentar }) => {
+  // First, get the order to validate it's completed and get the service_id
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+  });
+
+  if (!order)
+    throw new NotFoundError("Order not found", "ORDER_NOT_FOUND");
+
+  // Check if the order belongs to the user and is completed
+  if (order.buyer_id !== userId || order.status !== "completed")
+    throw new ForbiddenError(
+      "You can only review your completed orders",
+      "ORDER_NOT_COMPLETED"
+    );
+
+  const serviceId = order.service_id;
+
+  // Check if service exists
   const service = await prisma.service.findUnique({
     where: { id: serviceId },
   });
@@ -11,24 +29,11 @@ const createReview = async ({ userId, serviceId, rating, komentar }) => {
   if (!service)
     throw new NotFoundError("Service not found", "SERVICE_NOT_FOUND");
 
-  const orderExist = await prisma.order.findFirst({
-    where: {
-      buyer_id: userId,
-      serviceId,
-      status: "completed",
-    },
-  });
-
-  if (!orderExist)
-    throw new ForbiddenError(
-      "You can only review completed orders",
-      "ORDER_NOT_COMPLETED"
-    );
-
+  // Check if user has already reviewed this service
   const existingReview = await prisma.review.findFirst({
     where: {
       user_id: userId,
-      serviceId,
+      service_id: serviceId,
     },
   });
 
@@ -38,26 +43,30 @@ const createReview = async ({ userId, serviceId, rating, komentar }) => {
       "REVIEW_DUPLICATE"
     );
 
+  // Create the new review
   const newReview = await prisma.review.create({
     data: {
       user_id: userId,
-      serviceId,
+      service_id: serviceId,
       rating,
       komentar,
     },
   });
 
+  // Calculate new average rating for the service
   const reviews = await prisma.review.findMany({
-    where: { serviceId },
+    where: { service_id: serviceId },
     select: { rating: true },
   });
 
   const avgRating =
     reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
 
+  // Update service with new average rating
   await prisma.service.update({
     where: { id: serviceId },
     data: {
+      rating: avgRating,
       updated_at: new Date(),
     },
   });
@@ -67,7 +76,7 @@ const createReview = async ({ userId, serviceId, rating, komentar }) => {
 
 const getReviewsByService = async (serviceId) => {
   const reviews = await prisma.review.findMany({
-    where: { serviceId },
+    where: { service_id: serviceId },
     include: {
       user: {
         select: {
@@ -110,7 +119,7 @@ const getReviewsBySeller = async (seller_id) => {
 
   // Ambil semua review dari semua jasa seller ini
   const reviews = await prisma.review.findMany({
-    where: { serviceId: { in: serviceIds } },
+    where: { service_id: { in: serviceIds } },
     include: {
       user: {
         select: {

@@ -8,10 +8,10 @@ const createReview = async (req, res, next) => {
     const userId = req.user?.id;
     if (!userId) throw new BadRequestError("Unauthorized", "NO_USER_CONTEXT");
 
-    const serviceId = req.params.serviceId;
+    const orderId = req.params.orderId;
 
-    if (!serviceId)
-      throw new BadRequestError("serviceId is required", "MISSING_PARAM");
+    if (!orderId)
+      throw new BadRequestError("orderId is required", "MISSING_PARAM");
 
     // validasi body
     const { error, value } = createReviewSchema.validate(req.body);
@@ -21,7 +21,7 @@ const createReview = async (req, res, next) => {
 
     const result = await reviewService.createReview({
       userId,
-      serviceId,
+      orderId,
       ...value,
     });
 

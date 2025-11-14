@@ -14,24 +14,50 @@ const getAllOrderBuyer = async (buyer_id) => {
 
 const getOrderById = async (id) => {
   try {
-    const orders = await prisma.Order.findMany({
-      where: { seller_id: sellerId },
+    const order = await prisma.Order.findUnique({
+      where: { id },
       include: {
-        buyer: true,
-        service: true,
-      },
-      orderBy: {
-        created_at: "desc",
+        buyer: {
+          select: {
+            id: true,
+            user_id: true,
+            fullname: true,
+            foto_buyer: true,
+            user: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
+        seller: {
+          select: {
+            id: true,
+            user_id: true,
+            nama_toko: true,
+            foto_toko: true,
+            user: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
+        service: {
+          include: {
+            kategori: true,
+          },
+        },
       },
     });
 
-    if (!orders || orders.length === 0) {
-      return [];
+    if (!order) {
+      throw new NotFoundError("Order not found", "ORDER_NOT_FOUND");
     }
 
-    return orders;
+    return order;
   } catch (err) {
-    console.error("Error fetching orders by seller:", err.message);
+    console.error("Error fetching order by ID:", err.message);
     throw err;
   }
 };
