@@ -151,8 +151,6 @@ const switchUser = async (req, res, next) => {
   try {
     const result = await authService.switchUser(req.user);
 
-    console.log(result.refreshToken);
-
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

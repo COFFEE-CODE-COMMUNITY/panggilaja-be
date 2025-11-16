@@ -5,8 +5,8 @@ import BadRequestError from "../exceptions/BadRequestError.js";
 const createReview = async (req, res, next) => {
   try {
     // ambil data user dari JWT middleware
-    const userId = req.user?.id;
-    if (!userId) throw new BadRequestError("Unauthorized", "NO_USER_CONTEXT");
+    const buyerId = req.user?.id_buyer;
+    if (!buyerId) throw new BadRequestError("Unauthorized", "NO_USER_CONTEXT");
 
     const orderId = req.params.orderId;
 
@@ -20,7 +20,7 @@ const createReview = async (req, res, next) => {
       throw new BadRequestError(error.details[0].message, "INVALID_PAYLOAD");
 
     const result = await reviewService.createReview({
-      userId,
+      buyerId,
       orderId,
       ...value,
     });
@@ -54,12 +54,12 @@ const getReviewsByService = async (req, res, next) => {
   }
 };
 
-const getUserReviews = async (req, res, next) => {
+const getBuyerReviews = async (req, res, next) => {
   try {
     const userId = req.user?.id;
     if (!userId) throw new BadRequestError("Unauthorized", "NO_USER_CONTEXT");
 
-    const reviews = await reviewService.getReviewsByUser(userId);
+    const reviews = await reviewService.getReviewsByBuyer(userId);
 
     res.status(200).json({
       status: "success",
@@ -93,6 +93,6 @@ const getReviewsBySeller = async (req, res, next) => {
 export default {
   createReview,
   getReviewsByService,
-  getUserReviews,
+  getBuyerReviews,
   getReviewsBySeller,
 };
