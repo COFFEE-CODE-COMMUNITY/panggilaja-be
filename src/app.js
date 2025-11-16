@@ -4,8 +4,6 @@ import routes from "./routes/mainRoute.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
 import cors from "cors";
-import { swaggerUi } from "../swagger.js";
-import YAML from "yamljs";
 import oauthRouter from "./routes/oauthRoute.js";
 
 import cookieParser from "cookie-parser";
@@ -14,8 +12,6 @@ const createApp = () => {
   const app = express();
 
   // Middleware
-  const swaggerDocument = YAML.load("./openapi.yaml");
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   app.use(express.json());
   app.use(cookieParser());
   app.use(

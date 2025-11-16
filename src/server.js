@@ -34,7 +34,6 @@ io.on("connection", (socket) => {
 
 httpServer.listen(config.port, () => {
   console.info(`🚀 Server running on port ${config.port}`);
-  console.info("📚 Swagger docs available at http://localhost:5000/docs");
   console.info("🔌 Socket.IO ready for connections"); // 🔥 Tambah log socket ready
 });
 
