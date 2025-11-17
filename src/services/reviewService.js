@@ -5,7 +5,6 @@ import ForbiddenError from "../exceptions/ForbiddenError.js";
 
 const createReview = async ({ buyerId, orderId, rating, komentar }) => {
   return await prisma.$transaction(async (tx) => {
-    // First, get the order to validate it's completed and get the service_id
     const order = await tx.order.findUnique({
       where: { id: orderId },
     });
@@ -14,7 +13,6 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
 
     console.log(order);
 
-    // Check if the order belongs to the user and is completed
     if (order.status !== "completed") {
       throw new ForbiddenError(
         "You can only review your completed orders",
@@ -24,7 +22,6 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
 
     const serviceId = order.service_id;
 
-    // Check if service exists
     const service = await tx.service.findUnique({
       where: { id: serviceId },
     });
@@ -32,7 +29,6 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
     if (!service)
       throw new NotFoundError("Service not found", "SERVICE_NOT_FOUND");
 
-    // Check if user has already reviewed this service
     const existingReview = await tx.review.findFirst({
       where: {
         buyer_id: buyerId,
@@ -46,7 +42,6 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
         "REVIEW_DUPLICATE"
       );
 
-    // Create the new review
     const newReview = await tx.review.create({
       data: {
         buyer_id: buyerId,
@@ -56,7 +51,6 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
       },
     });
 
-    // Calculate new average rating for the service
     const reviews = await tx.review.findMany({
       where: { service_id: serviceId },
       select: { rating: true },
@@ -65,7 +59,6 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
     const avgRating =
       reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
 
-    // Update service with new average rating
     await tx.service.update({
       where: { id: serviceId },
       data: {

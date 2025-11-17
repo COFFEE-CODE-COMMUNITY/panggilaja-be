@@ -30,7 +30,6 @@ const validateToken = async (req, res, next) => {
         return next();
       });
 
-      console.log("Apakah masuk sini");
       return;
     }
 

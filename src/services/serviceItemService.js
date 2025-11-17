@@ -123,7 +123,6 @@ const deleteServiceById = async (id) => {
 
 const getAllKategori = async () => {
   try {
-    console.log("Masuk sini");
     const kategoriList = await prisma.kategori.findMany({
       orderBy: {
         kategori: "asc", // urutkan alfabetis biar rapi

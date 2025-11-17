@@ -3,42 +3,55 @@ import NotFoundError from "../exceptions/NotFoundError.js";
 import uploadUserAsset from "./uploadFileService.js";
 import { dokumentasiPhoto } from "../utils/filePath.js";
 
-const addNewDocs = async (id, file) => {
+const addNewDocs = async (sellerId, file) => {
   try {
-    const sellerAvail = await prisma.SellerProfile.findUnique({
-      where: { id },
+    return await prisma.$transaction(async (tx) => {
+      const sellerAvail = await tx.SellerProfile.findUnique({
+        where: { id: sellerId },
+      });
+
+      if (!sellerAvail) throw new NotFoundError("Seller not found");
+
+      const newDocument = await tx.Documentation.create({
+        data: {
+          seller_id: sellerId,
+          foto_testimoni: "init.png",
+        },
+      });
+
+      const fileName = `docs_${Date.now()}.jpg`;
+      const filePath = dokumentasiPhoto(
+        sellerAvail.user_id,
+        sellerAvail.id,
+        newDocument.id,
+        fileName
+      );
+
+      const uploadResult = await uploadUserAsset(file, filePath);
+
+      const updateDocs = await tx.Documentation.update({
+        where: { id: newDocument.id },
+        data: { foto_testimoni: uploadResult.url },
+      });
+
+      return updateDocs;
     });
-
-    if (!sellerAvail) throw new NotFoundError("Seller not found");
-
-    const newDocument = await prisma.Documentation.create({
-      data: {
-        // cara sementara
-        service_id: "c69e74c2-448b-40ff-9787-b4a1adb18223",
-        seller_id: id,
-        foto_testimoni: "init.png",
-      },
-    });
-
-    const fileName = `docs_${Date.now()}.jpg`;
-    const filePath = dokumentasiPhoto(
-      sellerAvail.user_id,
-      id,
-      newDocument.id,
-      fileName
-    );
-
-    const uploadResult = uploadUserAsset(file, filePath);
-
-    const updateDocs = await prisma.Documentation.update({
-      where: { id: newDocument.id },
-      data: { foto_testimoni: (await uploadResult).url },
-    });
-
-    return updateDocs;
   } catch (err) {
     console.error(err);
     throw err;
+  }
+};
+
+const getAllDocs = async (sellerId) => {
+  try {
+    const docs = await prisma.Documentation.findMany({
+      where: { seller_id: sellerId },
+    });
+
+    return docs;
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 };
 
@@ -81,6 +94,7 @@ const deleteDocsById = async (id) => {
 
 export default {
   addNewDocs,
+  getAllDocs,
   updateDocsById,
   deleteDocsById,
 };

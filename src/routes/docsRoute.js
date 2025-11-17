@@ -5,11 +5,10 @@ import upload from "../middleware/upload.js";
 
 const docsRouter = Router();
 
-// Token Validation
 docsRouter.use(validateToken);
 
-// docs Routes
-docsRouter.post("/", upload.single("file"), docsController.addNewDocs);
+docsRouter.post("/seller", upload.single("file"), docsController.addNewDocs);
+docsRouter.get("/seller", docsController.getSellerDocs);
 docsRouter.put("/:id", docsController.updateDocsById);
 docsRouter.delete("/:id", docsController.deleteDocsById);
 

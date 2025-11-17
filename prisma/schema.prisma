@@ -8,9 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-//
-// ENUMS
-//
 enum LoginProvider {
   manual
   google
@@ -38,9 +35,6 @@ enum SenderRole {
   SELLER
 }
 
-//
-// MAIN MODELS
-//
 model User {
   id             String        @id @default(uuid())
   email          String        @unique
@@ -70,9 +64,6 @@ model UserRoleMap {
   @@unique([user_id, role])
 }
 
-//
-// PROFILE MODELS
-//
 model BuyerProfile {
   id          String   @id @default(uuid())
   user_id     String   @unique
@@ -135,9 +126,6 @@ model AlamatSeller {
   seller SellerProfile @relation(fields: [id_seller], references: [id], onDelete: Cascade)
 }
 
-//
-// SERVICE, KATEGORI, SKILL
-//
 model Kategori {
   id       String    @id @default(uuid())
   kategori String    @unique
@@ -176,9 +164,6 @@ model Skill {
   sellerProfile SellerProfile @relation(fields: [seller_id], references: [id], onDelete: Cascade)
 }
 
-//
-// ORDER & REVIEW
-//
 model Order {
   id             String      @id @default(uuid())
   service_id     String
@@ -209,9 +194,6 @@ model Review {
   buyer   BuyerProfile @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
 }
 
-//
-// FAVORITE & DOCUMENTATION
-//
 model FavoriteService {
   id         String   @id @default(uuid())
   user_id    String
@@ -236,9 +218,6 @@ model Documentation {
   seller  SellerProfile? @relation(fields: [seller_id], references: [id], onDelete: Cascade)
 }
 
-//
-// AUTH MODELS
-//
 model RefreshToken {
   id         String   @id @default(uuid())
   user_id    String
@@ -261,9 +240,6 @@ model PasswordReset {
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
-//
-// MESSAGES MODELS
-//
 model Message {
   id          String     @id @default(uuid())
   buyer_id    String

@@ -1,8 +1,5 @@
 import supabase from "../utils/supabaseClient.js";
 import path from "path";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 export const uploadUserAsset = async (file, filePath) => {
   const { data, error } = await supabase.storage

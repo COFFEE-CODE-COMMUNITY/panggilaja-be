@@ -7,7 +7,6 @@ import BadRequestError from "../exceptions/BadRequestError.js";
 import NotFoundError from "../exceptions/NotFoundError.js";
 import ForbiddenError from "../exceptions/ForbiddenError.js";
 import UnauthorizedError from "../exceptions/UnauthorizedError.js";
-import { token } from "morgan";
 
 const buildUserPayload = (user, activeRole) => {
   if (!user) {

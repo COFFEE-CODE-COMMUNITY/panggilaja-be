@@ -38,7 +38,7 @@ const loginUser = async (req, res, next) => {
       status: "success",
       message: "User login successfully",
       data: {
-        accessToken, // ✅ Kirim langsung, bukan nested di user
+        accessToken,
       },
     });
   } catch (e) {
@@ -49,12 +49,14 @@ const loginUser = async (req, res, next) => {
 const refreshToken = async (req, res, next) => {
   try {
     console.log("🔄 Refresh token endpoint called");
-    console.log("📦 Cookies received:", req.cookies);
+    console.log("📦 All cookies:", req.cookies);
+    console.log("📦 Headers:", req.headers.cookie); // Cek raw cookie header
 
     const { refreshToken } = req.cookies;
 
     if (!refreshToken) {
       console.error("❌ Refresh token not found in cookies");
+      console.error("Available cookies:", Object.keys(req.cookies));
       throw new BadRequestError("Refresh token missing", "TOKEN_MISSING");
     }
 

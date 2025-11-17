@@ -1,15 +1,17 @@
 import multer from "multer";
 import path from "path";
-const storage = multer.memoryStorage(); // file -> buffer di req.file.buffer
+const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    // validasi tipe
     const ext = path.extname(file.originalname).toLowerCase();
     if (![".png", ".jpg", ".jpeg"].includes(ext)) {
       return cb(new Error("Only images are allowed"));
     }
     cb(null, true);
+  },
+  limits: {
+    fileSize: 1 * 1024 * 1024,
   },
 });
 

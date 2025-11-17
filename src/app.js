@@ -4,11 +4,12 @@ import routes from "./routes/mainRoute.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 import helmet from "helmet";
 import cors from "cors";
+import dotenv from "dotenv";
 import oauthRouter from "./routes/oauthRoute.js";
-
 import cookieParser from "cookie-parser";
 
 const createApp = () => {
+  dotenv.config();
   const app = express();
 
   // Middleware

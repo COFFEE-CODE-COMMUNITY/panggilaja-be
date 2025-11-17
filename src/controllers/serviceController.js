@@ -2,7 +2,6 @@ import serviceItemService from "../services/serviceItemService.js";
 
 const getAllServices = async (req, res, next) => {
   try {
-    console.log("Masuk sini");
     const result = await serviceItemService.getAllServices();
     res.status(200).json({
       status: "success",
