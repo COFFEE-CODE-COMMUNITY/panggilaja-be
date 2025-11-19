@@ -214,7 +214,6 @@ const deleteUserById = async (id) => {
   }
 };
 
-// Additional
 const getOrdersByUserId = async (id) => {
   try {
     const buyerId = await prisma.BuyerProfile.findUnique({
@@ -222,15 +221,43 @@ const getOrdersByUserId = async (id) => {
       select: { id: true },
     });
 
+    console.log(buyerId);
+
     if (!buyerId) throw new NotFoundError("Buyer not found");
 
-    const orders = await prisma.Order.findMany({
-      where: { buyer_id: id },
+    const order = await prisma.Order.findMany({
+      where: { buyer_id: buyerId.id },
+      select: {
+        id: true,
+        pesan_tambahan: true,
+        status: true,
+        total_harga: true,
+        created_at: true,
+        updated_at: true,
+
+        seller: {
+          select: {
+            id: true,
+            nama_toko: true,
+            foto_toko: true,
+          },
+        },
+
+        service: {
+          select: {
+            id: true,
+            nama_jasa: true,
+            foto_product: true,
+          },
+        },
+      },
     });
 
-    // if (orders.length === 0) throw new NotFoundError("No orders found");
+    if (!order) {
+      throw new NotFoundError("Order not found", "ORDER_NOT_FOUND");
+    }
 
-    return orders;
+    return order;
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;

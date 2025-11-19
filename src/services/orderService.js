@@ -51,6 +51,8 @@ const getOrderById = async (id) => {
       },
     });
 
+    console.log(order);
+
     if (!order) {
       throw new NotFoundError("Order not found", "ORDER_NOT_FOUND");
     }
