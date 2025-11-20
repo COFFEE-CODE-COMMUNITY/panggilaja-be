@@ -3,12 +3,37 @@ import NotFoundError from "../exceptions/NotFoundError.js";
 
 const getAllOrderBuyer = async (buyer_id) => {
   try {
-    const order = await prisma.Order.findMany({ where: { buyer_id } });
-    if (!order) throw new NotFoundError("Order not found");
-    return order;
+    const orders = await prisma.Order.findMany({
+      where: { buyer_id },
+      include: {
+        review: { select: { id: true } },
+        seller: {
+          select: {
+            id: true,
+            nama_toko: true,
+            foto_toko: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            nama_jasa: true,
+            foto_product: true,
+          },
+        },
+      },
+    });
+
+    const mappedOrders = orders.map((order) => {
+      const { review, ...rest } = order;
+      const is_reviewed = !!review;
+      return { ...rest, is_reviewed };
+    });
+
+    return mappedOrders;
   } catch (error) {
-    console.error("Error fetching order:", err.message);
-    throw err;
+    console.error("Error fetching order:", error.message);
+    throw error;
   }
 };
 
@@ -48,6 +73,7 @@ const getOrderById = async (id) => {
             kategori: true,
           },
         },
+        review: { select: { id: true } },
       },
     });
 
@@ -55,7 +81,8 @@ const getOrderById = async (id) => {
       throw new NotFoundError("Order not found", "ORDER_NOT_FOUND");
     }
 
-    return order;
+    const { review, ...rest } = order;
+    return { ...rest, is_reviewed: !!review };
   } catch (err) {
     console.error("Error fetching order by ID:", err.message);
     throw err;

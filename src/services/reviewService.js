@@ -32,17 +32,15 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
     if (!service)
       throw new NotFoundError("Service not found", "SERVICE_NOT_FOUND");
 
-    // Check if user has already reviewed this service
-    const existingReview = await tx.review.findFirst({
+    const existingReview = await tx.review.findUnique({
       where: {
-        buyer_id: buyerId,
-        service_id: serviceId,
+        order_id: orderId,
       },
     });
 
     if (existingReview)
       throw new BadRequestError(
-        "You have already reviewed this service",
+        "You have already reviewed this order",
         "REVIEW_DUPLICATE"
       );
 
@@ -51,6 +49,7 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
       data: {
         buyer_id: buyerId,
         service_id: serviceId,
+        order_id: orderId,
         rating,
         komentar,
       },
