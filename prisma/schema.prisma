@@ -172,6 +172,7 @@ model Order {
   status         OrderStatus @default(pending)
   tanggal        DateTime    @default(now())
   total_harga    Float
+  is_confirmed   Boolean     @default(false)
   created_at     DateTime    @default(now())
   updated_at     DateTime    @updatedAt
 

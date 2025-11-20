@@ -141,6 +141,7 @@ const addNewOrder = async (buyerId, data) => {
         pesan_tambahan: data.pesan_tambahan || "",
         total_harga: total_harga,
         status: "in_progress",
+        is_confirmed: true,
       },
       include: {
         service: {
