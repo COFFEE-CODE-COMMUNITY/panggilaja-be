@@ -148,12 +148,11 @@ model Service {
   created_at       DateTime      @default(now())
   updated_at       DateTime      @updatedAt
 
-  kategori       Kategori          @relation(fields: [kategori_id], references: [id])
-  seller         SellerProfile     @relation(fields: [seller_id], references: [id], onDelete: Cascade)
-  orders         Order[]
-  reviews        Review[]
-  favorites      FavoriteService[]
-  documentations Documentation[]
+  kategori  Kategori          @relation(fields: [kategori_id], references: [id])
+  seller    SellerProfile     @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  orders    Order[]
+  reviews   Review[]
+  favorites FavoriteService[]
 }
 
 model Skill {
@@ -179,12 +178,14 @@ model Order {
   service Service       @relation(fields: [service_id], references: [id])
   buyer   BuyerProfile  @relation(fields: [buyer_id], references: [id])
   seller  SellerProfile @relation(fields: [seller_id], references: [id])
+  review  Review?
 }
 
 model Review {
   id         String   @id @default(uuid())
   service_id String
   buyer_id   String
+  order_id   String   @unique
   rating     Float
   komentar   String?
   created_at DateTime @default(now())
@@ -192,6 +193,7 @@ model Review {
 
   service Service      @relation(fields: [service_id], references: [id])
   buyer   BuyerProfile @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  order   Order        @relation(fields: [order_id], references: [id])
 }
 
 model FavoriteService {
@@ -208,14 +210,12 @@ model FavoriteService {
 
 model Documentation {
   id             String   @id @default(uuid())
-  service_id     String?
-  seller_id      String?
+  seller_id      String
   foto_testimoni String
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  service Service?       @relation(fields: [service_id], references: [id], onDelete: Cascade)
-  seller  SellerProfile? @relation(fields: [seller_id], references: [id], onDelete: Cascade)
+  seller SellerProfile? @relation(fields: [seller_id], references: [id], onDelete: Cascade)
 }
 
 model RefreshToken {

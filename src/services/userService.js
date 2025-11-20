@@ -167,7 +167,6 @@ const deleteUserById = async (id) => {
         });
       }
 
-      // Jika user adalah seller → hapus semua data yang berelasi dengan seller
       if (seller) {
         await tx.order.deleteMany({
           where: { seller_id: seller.id },
@@ -225,7 +224,7 @@ const getOrdersByUserId = async (id) => {
 
     if (!buyerId) throw new NotFoundError("Buyer not found");
 
-    const order = await prisma.Order.findMany({
+    const orders = await prisma.Order.findMany({
       where: { buyer_id: buyerId.id },
       select: {
         id: true,
@@ -250,14 +249,18 @@ const getOrdersByUserId = async (id) => {
             foto_product: true,
           },
         },
+        review: { select: { id: true } },
       },
     });
 
-    if (!order) {
+    if (!orders) {
       throw new NotFoundError("Order not found", "ORDER_NOT_FOUND");
     }
 
-    return order;
+    return orders.map((order) => {
+      const { review, ...rest } = order;
+      return { ...rest, is_reviewed: !!review };
+    });
   } catch (err) {
     console.error("Error fetching orders:", err.message);
     throw err;
