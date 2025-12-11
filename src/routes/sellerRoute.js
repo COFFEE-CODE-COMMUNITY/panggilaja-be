@@ -16,9 +16,9 @@ protectedSellerRoute.use(validateToken);
 // Seller Routes
 protectedSellerRoute.get("/:id", sellerController.getSellerById);
 protectedSellerRoute.post(
-  "/",
-  upload.single("file"),
-  sellerController.addNewSeller
+  "/",
+  upload.single("file"),
+  sellerController.addNewSeller
 );
 protectedSellerRoute.put("/:id", sellerController.updateSellerById);
 protectedSellerRoute.delete("/:id", sellerController.deleteSellerById);
@@ -26,9 +26,9 @@ protectedSellerRoute.delete("/:id", sellerController.deleteSellerById);
 // Additional
 // ✅ PINDAHKAN KE SINI (Di bawah middleware validateToken)
 protectedSellerRoute.get(
-    "/:id/services",
-    sellerController.getAllServiceByIdSeller
-); 
+  "/:id/services",
+  sellerController.getAllServiceByIdSeller
+);
 protectedSellerRoute.get("/:id/orders", sellerController.getOrdersBySellerId);
 
 // Docs Routes
