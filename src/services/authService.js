@@ -110,11 +110,18 @@ const loginUser = async ({ email, password }) => {
     include: { roles: true, buyerProfile: true, sellerProfile: true },
   });
 
-  if (!user) throw new NotFoundError("User not found", "AUTH_USER_NOT_FOUND");
+  if (!user)
+    throw new UnauthorizedError(
+      "Wrong email or password",
+      "AUTH_BAD_CREDENTIAL"
+    );
 
   const isValid = await bcrypt.compare(password, user.password || "");
   if (!isValid) {
-    throw new BadRequestError("Invalid credentials", "AUTH_BAD_CREDENTIAL");
+    throw new UnauthorizedError(
+      "Wrong email or password",
+      "AUTH_BAD_CREDENTIAL"
+    );
   }
 
   const payload = buildUserPayload(user, "buyer");
