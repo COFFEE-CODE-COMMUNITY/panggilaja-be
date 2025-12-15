@@ -29,7 +29,16 @@ const getSellerById = async (id) => {
       where: { id_seller: id },
     });
 
-    return { ...seller, address: { ...addressSeller } };
+    const skills = await prisma.Skill.findFirst({
+      where: { seller_id: id }
+    });
+
+    return {
+      ...seller,
+      address: { ...addressSeller },
+      // If skill entry exists, use 'skill' column, otherwise empty string
+      skill: skills ? skills.skill : ""
+    };
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
     throw err;
@@ -84,6 +93,7 @@ const addNewSeller = async (
           user_id,
           status: "active",
           nama_toko: namaToko,
+          pengalaman: dataSeller.pengalaman, // Save pengalaman
           ...dataSeller,
         },
       });
@@ -155,6 +165,7 @@ const updateSellerById = async (id, dataSeller, dataSkill) => {
         where: { id },
         data: {
           status: "active",
+          pengalaman: dataSeller.pengalaman, // Ensure pengalaman is updated
           ...dataSeller,
         },
       });
@@ -218,6 +229,14 @@ const getOrdersBySellerId = async (id) => {
   try {
     const orders = await prisma.Order.findMany({
       where: { seller_id: id },
+      include: {
+        buyer: {
+          include: {
+            alamat: true,
+          },
+        },
+        service: true,
+      },
     });
 
     if (!orders) throw new NotFoundError("Order not found");

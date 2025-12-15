@@ -48,6 +48,10 @@ router.use("/favorites", favoriteRouter);
 // Message Route
 router.use("/chat", chatRouter);
 // Review Route
-router.use("/review", reviewRouter);
+// Review Route
+// public
+router.use("/review", reviewRouter.publicReviewRouter);
+// protected
+router.use("/review", reviewRouter.protectedReviewRouter);
 
 export default router;

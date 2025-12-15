@@ -30,13 +30,40 @@ const getAllServices = async () => {
 
 const getServiceById = async (id) => {
   try {
-    const services = await prisma.service.findUnique({
+    const service = await prisma.service.findUnique({
       where: { id },
     });
 
-    if (!services) throw new NotFoundError("Service not found");
+    if (!service) throw new NotFoundError("Service not found");
 
-    return services;
+    // Recalculate stats on the fly to ensure accuracy
+    const completedOrdersCount = await prisma.order.count({
+      where: {
+        service_id: id,
+        status: "completed", // using 'completed' from schema OrderStatus
+      },
+    });
+
+    const reviewsAggregate = await prisma.review.aggregate({
+      where: {
+        service_id: id,
+      },
+      _avg: {
+        rating: true,
+      },
+      _count: {
+        rating: true,
+      },
+    });
+
+    return {
+      ...service,
+      // Use real-time calculations
+      jumlah_pembeli: completedOrdersCount, // Mapping to existing field if possible, or new one
+      real_completed_orders: completedOrdersCount,
+      rata_rata_rating: reviewsAggregate._avg.rating || 0,
+      jumlah_rating: reviewsAggregate._count.rating || 0,
+    };
   } catch (err) {
     console.error("Error fetching service:", err.message);
     throw err;
