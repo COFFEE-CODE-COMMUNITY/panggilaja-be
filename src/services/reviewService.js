@@ -67,7 +67,7 @@ const createReview = async ({ buyerId, orderId, rating, komentar }) => {
       },
     });
 
-    return newReview;
+    return { ...newReview, seller_id: service.seller_id };
   });
 };
 
@@ -123,7 +123,7 @@ const getReviewsBySeller = async (sellerId) => {
           foto_buyer: true,
         },
       },
-      service: { select: { id: true, nama_jasa: true } },
+      service: { select: { id: true, nama_jasa: true, foto_product: true } },
     },
     orderBy: { created_at: "desc" },
   });

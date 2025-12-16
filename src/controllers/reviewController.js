@@ -25,6 +25,19 @@ const createReview = async (req, res, next) => {
       ...value,
     });
 
+    // Emit notification to seller
+    const io = req.app.get("io");
+    if (io && result?.seller_id) {
+      const sellerRoom = `user_seller_${result.seller_id}`;
+      io.to(sellerRoom).emit("review_added", {
+        serviceId: result.service_id,
+        rating: result.rating,
+        comment: result.komentar,
+        message: `New review added for your service`,
+      });
+      console.log(`🔔 Review notification emitted to ${sellerRoom}`);
+    }
+
     res.status(201).json({
       status: "success",
       message: "Review created successfully",

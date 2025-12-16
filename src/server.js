@@ -21,6 +21,8 @@ const io = new Server(httpServer, {
   pingInterval: 25000,
 });
 
+app.set("io", io);
+
 io.on("connection", (socket) => {
   console.log("✅ New client connected:", socket.id);
   console.log("🔗 Transport:", socket.conn.transport.name);
