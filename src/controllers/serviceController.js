@@ -38,6 +38,14 @@ const addItemService = async (req, res, next) => {
       jsonData,
       file
     );
+
+    // Emit real-time event
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("service_created", result);
+      console.log("📡 Emitted service_created event");
+    }
+
     res.status(201).json({
       status: "success",
       message: "Service added successfully!",
@@ -53,6 +61,14 @@ const updateServiceById = async (req, res, next) => {
     const id = req.params.id;
     const request = req.body;
     const result = await serviceItemService.updateServiceById(id, request);
+
+    // Emit real-time event
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("service_updated", result);
+      console.log("📡 Emitted service_updated event");
+    }
+
     res.status(200).json({
       status: "success",
       message: `Success Get Service by Id: ${id}`,
@@ -67,6 +83,14 @@ const deleteServiceById = async (req, res, next) => {
   try {
     const id = req.params.id;
     const result = await serviceItemService.deleteServiceById(id);
+
+    // Emit real-time event
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("service_deleted", { id });
+      console.log("📡 Emitted service_deleted event");
+    }
+
     res.status(200).json({
       status: "success",
       message: `Success Delete Service by Id: ${id}`,
