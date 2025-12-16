@@ -137,7 +137,11 @@ const updateServiceById = async (id, data) => {
 const deleteServiceById = async (id) => {
   try {
     const deletedService = await prisma.$transaction(async (tx) => {
-      await tx.FavoriteService.deleteMany({ where: { service_id: id } });
+      // Manually cascade delete because of RESTRICT constraints
+      await tx.review.deleteMany({ where: { service_id: id } });
+      await tx.order.deleteMany({ where: { service_id: id } });
+      await tx.favoriteService.deleteMany({ where: { service_id: id } }); // Redundant with Cascade but harmless
+
       return await tx.service.delete({ where: { id } });
     });
 
