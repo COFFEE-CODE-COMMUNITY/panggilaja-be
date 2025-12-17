@@ -30,14 +30,14 @@ const getSellerById = async (id) => {
     });
 
     const skills = await prisma.Skill.findFirst({
-      where: { seller_id: id }
+      where: { seller_id: id },
     });
 
     return {
       ...seller,
       address: { ...addressSeller },
       // If skill entry exists, use 'skill' column, otherwise empty string
-      skill: skills ? skills.skill : ""
+      skill: skills ? skills.skill : "",
     };
   } catch (err) {
     console.error("Errorfetching seller:", err.message);
@@ -199,16 +199,6 @@ const deleteSellerById = async (id) => {
             user_id: seller.user_id,
             role: "SELLER",
           },
-        },
-      });
-
-      await tx.AlamatSeller.delete({
-        where: { id_seller: id },
-      });
-
-      await prisma.Skill.delete({
-        where: {
-          seller_id: id,
         },
       });
 
