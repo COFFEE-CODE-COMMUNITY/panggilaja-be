@@ -17,12 +17,9 @@ const getAllSeller = async (req, res, next) => {
 const getSellerById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const loggedInSellerId = req.user.id_seller;
-
-    // validasi id pada token dan parameter
-    if (id !== loggedInSellerId) {
-      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
-    }
+    // Public Endpoint: No ownership check needed for viewing
+    // const loggedInSellerId = req.user.id_seller;
+    // if (id !== loggedInSellerId) { ... }
 
     const result = await sellerService.getSellerById(id);
     res.status(200).json({
@@ -38,12 +35,9 @@ const getSellerById = async (req, res, next) => {
 const getAllServiceByIdSeller = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const loggedInSellerId = req.user.id_seller;
-
-    // validasi id pada token dan parameter
-    if (id !== loggedInSellerId) {
-      throw new UnauthorizedError("Access denied", "UNAUTHORIZED");
-    }
+    // Public Endpoint: No ownership check needed for viewing
+    // const loggedInSellerId = req.user.id_seller;
+    // if (id !== loggedInSellerId) { ... }
 
     const result = await sellerService.getAllServiceByIdSeller(id);
     res.status(200).json({
